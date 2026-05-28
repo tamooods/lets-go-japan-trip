@@ -29,15 +29,16 @@ Migrations and seed are run manually in the Supabase SQL Editor (no CLI runner):
 | File          | Role                                                          |
 | ------------- | ------------------------------------------------------------- |
 | `index.html`  | Single entry point; all modals inline                         |
+| `style.css`   | ~1900 lines: theme vars, splash, sidebar, map, modals, animations |
 | `script.js`   | Core app: `DAYS` global, `renderSidebar`, `renderMap`, `goTo` |
-| `db.js`       | Supabase client init + `loadDays()`                           |
-| `auth.js`     | Magic link sign-in overlay                                    |
+| `db.js`       | Supabase client init + `loadDays()`, `loadMembers()`          |
+| `selection.js`| Member-identity modal; persists choice in localStorage        |
 | `realtime.js` | Supabase Realtime subscription on `days` table                |
 | `editor.js`   | Day edit modal + optimistic lock RPC call                     |
 | `conflict.js` | Conflict resolution modal (overwrite vs discard)              |
 
 **Script load order matters** (no ES modules, CDN globals):
-`config.js` → `db.js` → `auth.js` → `realtime.js` → `editor.js` → `conflict.js` → `script.js`
+`config.js` → `db.js` → `selection.js` → `realtime.js` → `editor.js` → `conflict.js` → `script.js`
 
 ## Key Conventions
 
@@ -45,11 +46,11 @@ Migrations and seed are run manually in the Supabase SQL Editor (no CLI runner):
 - **Global state:** `DAYS`, `map`, `markers`, `curIdx` live in `script.js`; set `window._editingDayId` in `editor.js` to suppress realtime UI updates while editing
 - **Modals:** Toggle with `.classList.add/remove('hidden')` — `hidden` maps to `display:none` in CSS
 - **`details` JSONB shape:** `{ place, jp, lat, lng, acts[], badges[], travel }`
-- **Optimistic locking:** Via `update_day_if_version` RPC — returns `{ ok: false, error: "conflict", current: row }` on version mismatch; handled by `conflict.js`
+- **Optimistic locking:** Via `update_day_if_version(p_id, p_expected_version, p_changes, p_actor text, p_actor_at text)` RPC — returns `{ ok: false, error: "conflict", current: row }` on version mismatch; handled by `conflict.js`. Migration 006 dropped the old `(uuid, int, jsonb, uuid)` variant.
 - **Hard-coded itinerary ID:** `window.TRIP_ITINERARY_ID = 'b8f5e2a1-0000-4000-8000-000000000001'` (set in config)
 
 ## Pitfalls
 
 - Adding a new JS file? Add it to `index.html` in the correct load order position
 - No error boundaries — `initApp()` throws uncaught if `loadDays()` fails
-- `editor.js` currently passes `p_actor: null` to the RPC (not the user ID) — minor inconsistency vs the plan docs
+- `editor.js` passes `p_actor: window.currentMember.name` (from selection.js) — relies on member flow completing before editing

@@ -8,6 +8,7 @@ Overview
 
 - Small static single-page app (Vanilla JS) for a collaborative Japan trip itinerary. Backed by Supabase (Postgres + Realtime + Auth). UI language: Thai (ภาษาไทย).
 - No bundler or npm build step by default — files are served statically from the repository root (index.html + scripts).
+- CSS is ~1900 lines in a single style.css (largest code file in the repo).
 
 Quick commands
 
@@ -33,16 +34,17 @@ High-level architecture (big-picture)
 
 - Single-entry static HTML: index.html loads a small set of ordered scripts and assets.
 - Script load order matters (the app relies on globals):
-  - config.js → db.js → auth.js → realtime.js → editor.js → conflict.js → script.js
+  - config.js → db.js → selection.js → realtime.js → editor.js → conflict.js → script.js
 - File responsibilities (high-level):
-  - index.html — entry point and modal markup
-  - config.example.js — runtime values (SUPABASE URL/KEY, TRIP_ITINERARY_ID)
-  - db.js — Supabase client initialization and loadDays()
-  - auth.js — magic-link sign-in overlay and auth flows
-  - realtime.js — Supabase Realtime subscription logic for the days table
-  - editor.js — day edit modal and optimistic update RPC calls
-  - conflict.js — conflict resolution modal and overwrite/discard UI
-  - script.js — core UI rendering, global state (DAYS, map, markers, curIdx), renderSidebar, renderMap, goTo
+  - index.html — entry point, splash screen, sidebar markup, all modals (editor, conflict, selection) inline
+  - config.example.js / config.js — runtime values (SUPABASE URL/KEY, TRIP_ITINERARY_ID)
+  - style.css — ~1900 lines: theme vars, splash, sidebar, map, modals, animations
+  - db.js — Supabase client creation, loadDays(), and loadMembers()
+  - selection.js — member-identity modal; persists choice in localStorage as window.currentMember
+  - realtime.js — Supabase Realtime subscription on the days table; updates DAYS + re-renders
+  - editor.js — day edit modal, optimistic update via update_day_if_version RPC, sets window.\_editingDayId to suppress realtime flicker
+  - conflict.js — conflict resolution modal (overwrite vs discard)
+  - script.js — core UI rendering, global state (DAYS, map, markers, curIdx), utilities (el, append, formatTimeAgo, haversineKm), renderSidebar, renderMap, goTo, initApp
 
 Key conventions and patterns (stay specific)
 
@@ -50,13 +52,14 @@ Key conventions and patterns (stay specific)
 - Global state: The app uses globals (DAYS, map, markers, curIdx). editor.js sets window.\_editingDayId to suppress realtime updates while editing. Be aware when refactoring to modules.
 - Modals: Toggle with .classList.add/remove('hidden') — CSS maps hidden → display:none.
 - details JSONB shape: { place, jp, lat, lng, acts[], badges[], travel }
-- Optimistic locking: update_day_if_version RPC returns { ok: false, error: 'conflict', current: row } on version mismatch; conflict.js handles this flow.
+- Optimistic locking: `update_day_if_version(p_id, p_expected_version, p_changes, p_actor text, p_actor_at text)` RPC returns { ok: false, error: 'conflict', current: row } on version mismatch; conflict.js handles this flow. (Signature changed in migration 006 — old variant with `p_actor uuid` was dropped.)
 - Hard-coded itinerary ID: window.TRIP_ITINERARY_ID = 'b8f5e2a1-0000-4000-8000-000000000001' (set via config.js).
 
 Pitfalls / gotchas specific to this repo
 
 - There is no package.json by default. If you add tooling (ESLint, Vite, tests), create package.json and a lockfile first; remove stale node_modules before installing to avoid mismatched state.
 - Adding a new JS file: remember to add it to index.html in the correct position in the load order — failing to respect order introduces runtime errors.
+- `selection.js` is loaded after `db.js` and before `realtime.js` — it depends on `loadMembers()` from db.js.
 - No error boundaries: initApp() will throw uncaught errors if loadDays() fails. When changing load flows, add robust error handling around DB calls.
 - Map + realtime are migration hotspots: Leaflet + Supabase realtime interactions are the most complex parts to refactor — treat them as separate integration tasks.
 
