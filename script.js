@@ -137,6 +137,9 @@ function initStatsWidget() {
       return;
     }
 
+    // Date is valid and in the future — show widget
+    widget.classList.remove('hidden');
+
     const totalSeconds = Math.floor(diff / 1000);
     const days = Math.floor(totalSeconds / 86400);
     const hours = Math.floor((totalSeconds % 86400) / 3600);
@@ -424,4 +427,7 @@ async function initApp() {
   }, 1000);
 }
 
-initApp();
+(async () => {
+  await initApp();
+  initStatsWidget();
+})();
