@@ -2022,3 +2022,20 @@ body::before {
 [data-theme="dark"] .stats-label {
   color: #aaa;
 }
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .stats-widget {
+    bottom: 10px;
+    right: 10px;
+    z-index: 50;
+  }
+
+  .stats-pill-text {
+    font-size: 0.75rem;
+  }
+
+  .stats-expanded {
+    font-size: 0.7rem;
+  }
+}
