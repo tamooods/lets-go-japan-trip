@@ -131,11 +131,12 @@ async function savePlaceEditor() {
     } else {
       await addPlace(_editingPlaceDay.id, data);
     }
+    const day = _editingPlaceDay; // save before closePlaceEditor nulls it
     closePlaceEditor();
     // Refresh detail view
-    places = await loadDayPlaces(_editingPlaceDay.id);
-    renderDayDetail(_editingPlaceDay);
-    renderPlaceMap(_editingPlaceDay);
+    places = await loadDayPlaces(day.id);
+    renderDayDetail(day);
+    renderPlaceMap(day);
   } catch (err) {
     alert('เกิดข้อผิดพลาด: ' + err.message);
   }
