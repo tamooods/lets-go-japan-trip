@@ -2039,3 +2039,233 @@ body::before {
     font-size: 0.7rem;
   }
 }
+
+/* ═══════════════════════════════
+   DAY DETAIL — PLACE LIST
+═══════════════════════════════ */
+.day-place-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0.75rem;
+}
+
+.place-empty {
+  text-align: center;
+  color: var(--gray);
+  padding: 2rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.detail-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0;
+  font-family: inherit;
+}
+.detail-back-btn:hover {
+  opacity: 0.7;
+}
+
+.place-card {
+  background: var(--warm);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.45rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.15s;
+  border: 1px solid var(--line);
+}
+.place-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+}
+.place-card.active {
+  border-color: var(--red);
+  box-shadow: 0 0 0 2px rgba(200,92,58,0.15);
+}
+
+.place-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.place-pin {
+  flex-shrink: 0;
+  width: 24px;
+  height: 28px;
+  background: var(--red);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  margin-top: 2px;
+}
+
+.place-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.place-card-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.15rem;
+}
+
+.place-card-acts {
+  font-size: 0.75rem;
+  color: var(--gray);
+  line-height: 1.4;
+  margin-bottom: 0.2rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.place-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.place-card-expense {
+  color: var(--sage);
+  font-weight: 600;
+}
+
+.place-card-split {
+  color: var(--blue);
+  font-size: 0.7rem;
+}
+
+.place-card-focus {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.25rem 0.4rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+.place-card-focus:hover {
+  background: var(--line);
+}
+
+.place-card-actions {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+}
+.place-edit-btn, .place-del-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: var(--gray);
+  padding: 0.1rem 0.2rem;
+  font-family: inherit;
+}
+.place-edit-btn:hover { color: var(--ink); }
+.place-del-btn:hover { color: var(--red); }
+
+.add-place-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.6rem;
+  margin-top: 0.5rem;
+  background: none;
+  border: 2px dashed var(--line);
+  border-radius: 10px;
+  color: var(--gray);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition: border-color 0.2s, color 0.2s;
+}
+.add-place-btn:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* ═══════════════════════════════
+   PLACE EDITOR MODAL
+═══════════════════════════════ */
+.coord-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+}
+.coord-row .modal-input {
+  flex: 1;
+}
+.coord-fields {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+.modal-input-sm {
+  width: 50%;
+  font-size: 0.75rem;
+  text-align: center;
+}
+.coord-hint {
+  font-size: 0.7rem;
+  color: var(--gray);
+  margin: 0.2rem 0;
+}
+.search-results {
+  background: var(--warm);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-bottom: 0.3rem;
+}
+.search-results.hidden { display: none; }
+.search-result-item {
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--line);
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--line); }
+
+.btn-sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.split-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+.split-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
