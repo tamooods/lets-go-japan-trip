@@ -4,12 +4,20 @@ async function ensureMemberSelected() {
 
   if (storedId && storedName) {
     window.currentMember = { id: storedId, name: storedName };
+    // Still load full member list for place split selection
+    try {
+      const members = await loadMembers();
+      window.members = members;
+    } catch (e) {
+      window.members = [];
+    }
     return;
   }
 
   let members;
   try {
     members = await loadMembers();
+    window.members = members;
   } catch (err) {
     alert('ไม่สามารถโหลดรายชื่อสมาชิกได้ กรุณาลองใหม่');
     location.reload();
