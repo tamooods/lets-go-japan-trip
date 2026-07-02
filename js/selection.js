@@ -39,8 +39,11 @@ async function ensureMemberSelected() {
   list.textContent = '';
 
   return new Promise((resolve) => {
-    members.forEach((m) => {
-      const btn = el('button', 'member-btn', m.name);
+    members.forEach((m, i) => {
+      const btn = el('button', 'member-btn');
+      const avatar = el('span', `member-avatar avatar-c${i % 4}`, m.name.charAt(0));
+      const label = el('span', 'member-name', m.name);
+      append(btn, avatar, label);
       btn.onclick = () => {
         localStorage.setItem('selectedMemberId', m.id);
         localStorage.setItem('selectedMemberName', m.name);
