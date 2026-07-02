@@ -135,12 +135,28 @@
         </div>
         <p id="editor-server-update" class="server-update-notice" style="display: none"></p>
         <label class="modal-label"
-          >สถานที่
-          <input type="text" id="editor-place" class="modal-input" />
+          >สถานที่ <span class="required-mark">*</span>
+          <input
+            type="text"
+            id="editor-place"
+            class="modal-input"
+            required
+            aria-required="true"
+            placeholder="เช่น Tokyo"
+          />
+          <span id="editor-place-error" class="field-error hidden">กรุณาใส่ชื่อสถานที่</span>
         </label>
         <label class="modal-label"
-          >กิจกรรม (แต่ละบรรทัด = 1 กิจกรรม)
+          >วันที่ <span class="required-mark">*</span>
+          <input type="date" id="editor-date" class="modal-input" required aria-required="true" />
+          <span id="editor-date-error" class="field-error hidden">กรุณาเลือกวันที่</span>
+        </label>
+        <label class="modal-label"
+          >กิจกรรม (แต่ละบรรทัด = 1 กิจกรรม) <span class="required-mark">*</span>
           <textarea id="editor-acts" class="modal-textarea" rows="4"></textarea>
+          <span id="editor-acts-error" class="field-error hidden"
+            >กรุณาใส่กิจกรรมอย่างน้อย 1 รายการ</span
+          >
         </label>
         <div class="modal-actions">
           <button id="editor-save" class="btn-primary">บันทึก</button>

@@ -16,9 +16,9 @@ Quick commands
   - npx serve .
   - or open index.html directly in a browser
 - Lint & format (requires `npm install` first):
-  - npm run format   — auto-format with Prettier
-  - npm run lint     — ESLint check
-  - npm run check    — both lint + format check
+  - npm run format — auto-format with Prettier
+  - npm run lint — ESLint check
+  - npm run check — both lint + format check
 - Runtime config (required):
   - Copy and edit config.example.js → config.js and fill Supabase credentials before running locally. (config.js is gitignored in this repo.)
   - On Vercel the repo uses vercel.json to write a runtime config.js at build time (see Deploy below).
@@ -58,7 +58,7 @@ Key conventions and patterns (stay specific)
 - DOM helpers: Use el(tag, cls, text) and append(parent, ...children) consistently. Avoid innerHTML for user data to prevent XSS.
 - Global state: The app uses globals (DAYS, map, markers, curIdx). editor.js sets window.\_editingDayId to suppress realtime updates while editing. Be aware when refactoring to modules.
 - Modals: Toggle with .classList.add/remove('hidden') — CSS maps hidden → display:none.
-- details JSONB shape: { place, jp, lat, lng, acts[], badges[], travel }
+- details JSONB shape: { place, date, jp, lat, lng, acts[], badges[], travel }. `date` is a free-text label (e.g. "6 Dec"); older rows may lack it and instead pack "place _ date" into `place` — `splitPlaceDate()` in script.js falls back to splitting on `_` until re-saved through the editor.
 - Optimistic locking: `update_day_if_version(p_id, p_expected_version, p_changes, p_actor text, p_actor_at text)` RPC returns { ok: false, error: 'conflict', current: row } on version mismatch; conflict.js handles this flow. (Signature changed in migration 006 — old variant with `p_actor uuid` was dropped.)
 - Hard-coded itinerary ID: window.TRIP_ITINERARY_ID = 'b8f5e2a1-0000-4000-8000-000000000001' (set via config.js).
 

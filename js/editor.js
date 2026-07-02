@@ -6,9 +6,28 @@ function openEditor(day) {
   window._editingDayId = day.id;
   const det = day.details;
 
-  document.getElementById('editor-title').textContent = 'แก้ไข: ' + det.place;
-  document.getElementById('editor-place').value = det.place || '';
+  // ponytail: older entries packed a free-text date into "place _ date" (or
+  // none at all); <input type="date"> only accepts real ISO dates, so those
+  // legacy labels can't be pre-filled — leave the picker blank for a one-time
+  // re-pick instead of guessing a year.
+  let place = det.place || '';
+  if (!det.date && place.includes('_')) {
+    place = place.split('_')[0].trim();
+  }
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(det.date || '') ? det.date : '';
+
+  document.getElementById('editor-title').textContent = 'แก้ไข: ' + place;
+  document.getElementById('editor-place').value = place;
+  document.getElementById('editor-date').value = date;
   document.getElementById('editor-acts').value = (det.acts || []).join('\n');
+  [
+    ['editor-place', 'editor-place-error'],
+    ['editor-date', 'editor-date-error'],
+    ['editor-acts', 'editor-acts-error'],
+  ].forEach(([fieldId, errorId]) => {
+    document.getElementById(fieldId).classList.remove('invalid');
+    document.getElementById(errorId).classList.add('hidden');
+  });
   document.getElementById('editor-server-update').style.display = 'none';
   document.getElementById('editor-modal').classList.remove('hidden');
 }
@@ -19,20 +38,38 @@ function closeEditor() {
   document.getElementById('editor-modal').classList.add('hidden');
 }
 
+function validateEditorField(fieldId, errorId, isValid) {
+  const field = document.getElementById(fieldId);
+  const error = document.getElementById(errorId);
+  field.classList.toggle('invalid', !isValid);
+  error.classList.toggle('hidden', isValid);
+  return isValid;
+}
+
 async function saveEditor() {
   if (!_editingDay) return;
-  const saveBtn = document.getElementById('editor-save');
-  saveBtn.disabled = true;
-  saveBtn.textContent = 'กำลังบันทึก...';
 
   const place = document.getElementById('editor-place').value.trim();
+  const date = document.getElementById('editor-date').value.trim();
   const acts = document
     .getElementById('editor-acts')
     .value.split('\n')
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const newDetails = Object.assign({}, _editingDay.details, { place, acts });
+  const placeOk = validateEditorField('editor-place', 'editor-place-error', !!place);
+  const dateOk = validateEditorField('editor-date', 'editor-date-error', !!date);
+  const actsOk = validateEditorField('editor-acts', 'editor-acts-error', acts.length > 0);
+  if (!placeOk || !dateOk || !actsOk) {
+    (document.querySelector('#editor-modal .invalid') || {}).focus?.();
+    return;
+  }
+
+  const saveBtn = document.getElementById('editor-save');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'กำลังบันทึก...';
+
+  const newDetails = Object.assign({}, _editingDay.details, { place, date, acts });
   const { data, error } = await db.rpc('update_day_if_version', {
     p_id: _editingDay.id,
     p_expected_version: _editingDay.version,
@@ -62,6 +99,18 @@ async function saveEditor() {
   closeEditor();
 }
 
+document.getElementById('editor-place').addEventListener('input', (e) => {
+  e.target.classList.remove('invalid');
+  document.getElementById('editor-place-error').classList.add('hidden');
+});
+document.getElementById('editor-date').addEventListener('input', (e) => {
+  e.target.classList.remove('invalid');
+  document.getElementById('editor-date-error').classList.add('hidden');
+});
+document.getElementById('editor-acts').addEventListener('input', (e) => {
+  e.target.classList.remove('invalid');
+  document.getElementById('editor-acts-error').classList.add('hidden');
+});
 document.getElementById('editor-save').addEventListener('click', saveEditor);
 document.getElementById('editor-cancel').addEventListener('click', closeEditor);
 document.getElementById('editor-close').addEventListener('click', closeEditor);

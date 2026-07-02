@@ -20,6 +20,26 @@ function append(parent, ...children) {
   return parent;
 }
 
+// ponytail: older entries packed the date into "place _ date"; fall back to
+// splitting that until every row has been re-saved through the editor.
+function splitPlaceDate(det) {
+  if (det.date) return { place: det.place, date: formatDateLabel(det.date) };
+  if (det.place && det.place.includes('_')) {
+    const parts = det.place.split('_');
+    return { place: parts[0].trim(), date: (parts[1] || '').trim() };
+  }
+  return { place: det.place, date: '' };
+}
+
+// details.date is stored as an ISO "YYYY-MM-DD" from <input type="date">;
+// display it the same short way the old free-text convention did ("6 Dec").
+function formatDateLabel(dateStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (!m) return dateStr;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
 let DAYS = [];
 let places = [],
   placeMarkers = [],
@@ -220,8 +240,10 @@ function renderSidebar(days) {
       openEditor(d);
     });
 
+    const { place, date } = splitPlaceDate(det);
     const dayPlace = el('div', 'day-place');
-    dayPlace.appendChild(el('span', 'place-name', det.place));
+    dayPlace.appendChild(el('span', 'place-name', place));
+    if (date) dayPlace.appendChild(el('span', 'place-date', date));
     append(info, dayPlace, el('div', 'day-detail', (det.acts || [])[0] || ''), meta);
     append(rowTop, pin, info, editBtn);
     append(item, rowTop);
@@ -286,10 +308,10 @@ function buildPopup(d, i) {
   append(pop, el('div', 'pop-label', 'Day ' + (i + 1)));
 
   const titleEl = el('div', 'pop-title');
-  const placeParts = det.place.split('_');
-  titleEl.appendChild(el('span', null, placeParts[0].trim()));
-  if (placeParts[1]) {
-    titleEl.appendChild(el('span', 'day-number', ' • ' + placeParts[1].trim()));
+  const { place, date } = splitPlaceDate(det);
+  titleEl.appendChild(el('span', null, place));
+  if (date) {
+    titleEl.appendChild(el('span', 'day-number', ' • ' + date));
   }
   pop.appendChild(titleEl);
 

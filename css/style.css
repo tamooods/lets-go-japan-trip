@@ -17,7 +17,7 @@
   --gray: #9b8e7e;
   --line: rgba(42, 32, 24, 0.1);
   --font-body: 'Noto Sans Thai', system-ui, sans-serif;
-  --font-hand: 'Caveat', cursive;
+  --font-hand: 'Caveat', 'Noto Sans Thai', cursive;
   --tape: rgba(232, 167, 120, 0.55);
   --paper: #fffdf7;
 }
@@ -1718,15 +1718,29 @@ body::before {
   display: none;
 }
 .modal-box {
-  background: #fff;
-  border-radius: 20px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
   padding: 1.5rem;
   width: 100%;
   max-width: 420px;
+  position: relative;
   box-shadow:
     0 12px 40px rgba(42, 32, 24, 0.15),
     0 2px 8px rgba(42, 32, 24, 0.08);
   animation: modalIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.modal-box::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 32px;
+  width: 56px;
+  height: 20px;
+  background: var(--tape);
+  transform: rotate(-4deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes modalIn {
@@ -1745,15 +1759,15 @@ body::before {
   align-items: center;
   margin-bottom: 1.25rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(42, 32, 24, 0.06);
+  border-bottom: 2px dashed var(--line);
 }
 .modal-header h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-body);
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-family: var(--font-hand);
+  font-size: 1.7rem;
+  font-weight: 700;
   color: var(--ink);
 }
 .modal-header h3::before {
@@ -1765,17 +1779,23 @@ body::before {
 }
 .modal-close {
   background: none;
-  border: none;
-  font-size: 1.25rem;
+  border: 1.5px dashed var(--line);
+  font-size: 1rem;
   cursor: pointer;
   color: var(--gray);
-  padding: 4px;
-  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   transition: all 0.2s ease;
 }
 .modal-close:hover {
-  background: rgba(42, 32, 24, 0.05);
-  color: var(--ink);
+  background: rgba(200, 92, 58, 0.08);
+  border-color: var(--red);
+  color: var(--red);
 }
 .modal-label {
   display: block;
@@ -1792,11 +1812,11 @@ body::before {
   width: 100%;
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
-  border: 1px solid rgba(42, 32, 24, 0.1);
-  border-radius: 12px;
+  border: 1.5px dashed var(--line);
+  border-radius: 6px;
   font-size: 0.95rem;
   box-sizing: border-box;
-  background: #faf9f7;
+  background: rgba(120, 100, 60, 0.04);
   color: var(--ink);
   transition: all 0.2s ease;
   font-family: inherit;
@@ -1804,8 +1824,9 @@ body::before {
 .modal-input:focus,
 .modal-textarea:focus {
   outline: none;
+  border-style: solid;
   border-color: var(--red);
-  background: #fff;
+  background: var(--paper);
   box-shadow: 0 0 0 3px rgba(200, 92, 58, 0.1);
 }
 .modal-input::placeholder,
@@ -1818,7 +1839,24 @@ body::before {
   min-height: 100px;
   line-height: 1.6;
 }
-.modal-input.invalid {
+
+input[type='date'].modal-input {
+  font-family: var(--font-hand);
+  font-size: 1.1rem;
+  color: var(--red);
+}
+
+input[type='date'].modal-input::-webkit-calendar-picker-indicator {
+  filter: invert(46%) sepia(46%) saturate(1074%) hue-rotate(335deg) brightness(87%) contrast(88%);
+  cursor: pointer;
+}
+
+[data-theme='dark'] input[type='date'].modal-input::-webkit-calendar-picker-indicator {
+  filter: invert(74%) sepia(20%) saturate(1074%) hue-rotate(335deg) brightness(100%) contrast(88%);
+}
+.modal-input.invalid,
+.modal-textarea.invalid {
+  border-style: solid;
   border-color: var(--red);
   background: rgba(200, 92, 58, 0.05);
   animation: fieldShake 0.35s ease;
@@ -1857,7 +1895,7 @@ body::before {
   color: #fff;
   border: none;
   padding: 0.75rem 1.5rem;
-  border-radius: 12px;
+  border-radius: 20px;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
@@ -1874,9 +1912,9 @@ body::before {
 .btn-secondary {
   background: transparent;
   color: var(--gray);
-  border: 1px solid rgba(42, 32, 24, 0.1);
+  border: 1.5px dashed var(--line);
   padding: 0.75rem 1.25rem;
-  border-radius: 12px;
+  border-radius: 20px;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
@@ -1885,7 +1923,7 @@ body::before {
 .btn-secondary:hover {
   background: rgba(42, 32, 24, 0.03);
   color: var(--ink);
-  border-color: rgba(42, 32, 24, 0.2);
+  border-color: var(--gray);
 }
 .server-update-notice {
   background: rgba(200, 92, 58, 0.08);
