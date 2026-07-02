@@ -242,13 +242,26 @@ document
 document
   .getElementById("place-editor-search-btn")
   .addEventListener("click", searchPlaceHandler);
+let _searchTimer;
+document.getElementById("place-editor-search").addEventListener("input", () => {
+  clearTimeout(_searchTimer);
+  const q = document.getElementById("place-editor-search").value.trim();
+  if (!q) {
+    document.getElementById("place-editor-results").classList.add("hidden");
+    return;
+  }
+  _searchTimer = setTimeout(searchPlaceHandler, 300);
+});
 document
   .getElementById("place-editor-search")
   .addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
+      clearTimeout(_searchTimer);
       searchPlaceHandler();
     }
   });
 
-// Map click pick is triggered via the search input hint
+document.getElementById("place-editor-pick-btn").addEventListener("click", () => {
+  enablePlacePickMode();
+});
