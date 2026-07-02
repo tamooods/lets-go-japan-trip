@@ -349,8 +349,9 @@ function renderMap(days) {
   for (let i = 1; i < coords.length; i++) {
     const leg = L.polyline([coords[i - 1], coords[i]], {
       color: '#c85c3a',
-      weight: 2,
+      weight: 1.5,
       opacity: 0.45,
+      dashArray: '5 7',
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(map);
