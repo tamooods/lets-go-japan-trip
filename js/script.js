@@ -386,6 +386,13 @@ function renderMap(days) {
   });
 
   days.forEach((d, i) => {
+    // ponytail: nearby pins get visually nudged apart (see declutterMarkerIcons
+    // below) without moving the marker's real LatLng, so an inner wrapper div
+    // carries that offset separately from the .mk pin's own rotate/hover/reveal
+    // transforms.
+    const offsetDiv = document.createElement('div');
+    offsetDiv.className = 'mk-offset';
+    offsetDiv.id = 'mkoff' + i;
     const mkDiv = document.createElement('div');
     mkDiv.className = 'mk';
     mkDiv.id = 'mk' + i;
@@ -393,10 +400,11 @@ function renderMap(days) {
     mkSpan.className = 'mn';
     mkSpan.textContent = String(i + 1);
     mkDiv.appendChild(mkSpan);
+    offsetDiv.appendChild(mkDiv);
 
     const icon = L.divIcon({
       className: '',
-      html: mkDiv.outerHTML,
+      html: offsetDiv.outerHTML,
       iconSize: [40, 48],
       iconAnchor: [20, 47],
       popupAnchor: [0, -50],
@@ -410,31 +418,47 @@ function renderMap(days) {
   });
 
   // ponytail: pins that end up close together on screen (e.g. nearby Tokyo
-  // days) get nudged apart in pixel space so their numbers don't overlap;
+  // days) get nudged apart in pixel space so their numbers don't overlap.
+  // This only offsets the rendered icon (via .mk-offset), never the marker's
+  // real LatLng, so popups, the route line, and flyTo() targeting always
+  // stay anchored to the true coordinates. Recomputed on every zoom/pan so
+  // the offset shrinks to nothing once pins are naturally far apart —
   // upgrade to a spiderfy plugin if trips start clustering 5+ pins tightly.
-  map.once('moveend', () => {
+  function declutterMarkerIcons() {
     const pts = coords.map((c) => map.latLngToContainerPoint(c));
+    const targets = pts.map((p) => ({ x: p.x, y: p.y }));
     const minDist = 28;
     for (let pass = 0; pass < 8; pass++) {
-      for (let i = 0; i < pts.length; i++) {
-        for (let j = i + 1; j < pts.length; j++) {
-          const dx = pts[j].x - pts[i].x;
-          const dy = pts[j].y - pts[i].y;
+      for (let i = 0; i < targets.length; i++) {
+        for (let j = i + 1; j < targets.length; j++) {
+          const dx = targets[j].x - targets[i].x;
+          const dy = targets[j].y - targets[i].y;
           const dist = Math.hypot(dx, dy) || 0.01;
           if (dist < minDist) {
             const push = (minDist - dist) / 2;
             const ux = dx / dist;
             const uy = dy / dist;
-            pts[i].x -= ux * push;
-            pts[i].y -= uy * push;
-            pts[j].x += ux * push;
-            pts[j].y += uy * push;
+            targets[i].x -= ux * push;
+            targets[i].y -= uy * push;
+            targets[j].x += ux * push;
+            targets[j].y += uy * push;
           }
         }
       }
     }
-    markers.forEach((m, i) => m.setLatLng(map.containerPointToLatLng(pts[i])));
-  });
+    targets.forEach((t, i) => {
+      const el = document.getElementById('mkoff' + i);
+      if (!el) return;
+      const dx = t.x - pts[i].x;
+      const dy = t.y - pts[i].y;
+      el.style.transform =
+        Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5 ? `translate(${dx}px, ${dy}px)` : '';
+    });
+  }
+  if (window._declutterHandler) map.off('zoom move', window._declutterHandler);
+  window._declutterHandler = declutterMarkerIcons;
+  map.on('zoom move', window._declutterHandler);
+  map.once('moveend', declutterMarkerIcons);
 
   markers.forEach((_, i) => {
     const mkEl = document.getElementById('mk' + i);

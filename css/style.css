@@ -1215,6 +1215,10 @@ body::before {
 }
 
 /* ─── Map markers ─── */
+.mk-offset {
+  transition: transform 0.2s ease;
+}
+
 .mk {
   width: 42px;
   height: 42px;
