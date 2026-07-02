@@ -2100,8 +2100,8 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
 /* Countdown Widget */
 .stats-widget {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 25px;
+  right: 4px;
   z-index: 1000;
   font-family: var(--font-body);
 }
@@ -2209,8 +2209,10 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
 /* Mobile responsive */
 @media (max-width: 640px) {
   .stats-widget {
-    bottom: 10px;
-    right: 10px;
+    top: 10px;
+    left: 10px;
+    bottom: auto;
+    right: auto;
     z-index: 51;
   }
 
@@ -2220,6 +2222,16 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
 
   .stats-expanded {
     font-size: 0.7rem;
+    top: 48px;
+    bottom: auto;
+    left: 0;
+    right: auto;
+    transform: translateY(-8px);
+  }
+
+  .stats-pill:hover ~ .stats-expanded,
+  .stats-expanded:hover {
+    transform: translateY(0);
   }
 }
 
