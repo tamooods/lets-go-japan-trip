@@ -198,6 +198,8 @@ function renderSidebar(days) {
     const det = d.details;
     const item = el('div', 'day-item');
     item.dataset.i = i;
+    item.tabIndex = 0;
+    item.setAttribute('role', 'button');
     item.style.animationDelay = i * 0.07 + 0.1 + 's';
 
     const rowTop = el('div', 'day-row');
@@ -224,6 +226,12 @@ function renderSidebar(days) {
     append(rowTop, pin, info, editBtn);
     append(item, rowTop);
     item.addEventListener('click', () => goTo(i));
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        goTo(i);
+      }
+    });
     item.addEventListener('mouseenter', () => {
       const leg = (window._legLines || [])[i - 1];
       if (leg) leg.setStyle({ weight: 3, opacity: 0.9, dashArray: null });
@@ -341,8 +349,8 @@ function renderMap(days) {
   for (let i = 1; i < coords.length; i++) {
     const leg = L.polyline([coords[i - 1], coords[i]], {
       color: '#c85c3a',
-      weight: 3,
-      opacity: 0.6,
+      weight: 2,
+      opacity: 0.45,
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(map);
@@ -352,7 +360,7 @@ function renderMap(days) {
   map.once('zoomend', () => {
     const zoom = map.getZoom();
     window._legLines.forEach((leg) => {
-      leg.setStyle({ opacity: zoom > 8 ? 0.6 : 0.3 });
+      leg.setStyle({ opacity: zoom > 8 ? 0.45 : 0.25 });
     });
   });
 
@@ -368,16 +376,43 @@ function renderMap(days) {
     const icon = L.divIcon({
       className: '',
       html: mkDiv.outerHTML,
-      iconSize: [34, 42],
-      iconAnchor: [17, 41],
-      popupAnchor: [0, -44],
+      iconSize: [40, 48],
+      iconAnchor: [20, 47],
+      popupAnchor: [0, -50],
     });
 
-    const m = L.marker([d.details.lat, d.details.lng], { icon })
+    const m = L.marker(coords[i], { icon })
       .bindPopup(buildPopup(d, i), { maxWidth: 280 })
       .addTo(map);
     m.on('click', () => setActive(i));
     markers.push(m);
+  });
+
+  // ponytail: pins that end up close together on screen (e.g. nearby Tokyo
+  // days) get nudged apart in pixel space so their numbers don't overlap;
+  // upgrade to a spiderfy plugin if trips start clustering 5+ pins tightly.
+  map.once('moveend', () => {
+    const pts = coords.map((c) => map.latLngToContainerPoint(c));
+    const minDist = 28;
+    for (let pass = 0; pass < 8; pass++) {
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const dx = pts[j].x - pts[i].x;
+          const dy = pts[j].y - pts[i].y;
+          const dist = Math.hypot(dx, dy) || 0.01;
+          if (dist < minDist) {
+            const push = (minDist - dist) / 2;
+            const ux = dx / dist;
+            const uy = dy / dist;
+            pts[i].x -= ux * push;
+            pts[i].y -= uy * push;
+            pts[j].x += ux * push;
+            pts[j].y += uy * push;
+          }
+        }
+      }
+    }
+    markers.forEach((m, i) => m.setLatLng(map.containerPointToLatLng(pts[i])));
   });
 
   markers.forEach((_, i) => {
@@ -663,9 +698,9 @@ function renderPlaceMap(day) {
     const icon = L.divIcon({
       className: '',
       html: mkDiv.outerHTML,
-      iconSize: [34, 42],
-      iconAnchor: [17, 41],
-      popupAnchor: [0, -44],
+      iconSize: [40, 48],
+      iconAnchor: [20, 47],
+      popupAnchor: [0, -50],
     });
 
     const m = L.marker([p.lat, p.lng], { icon }).addTo(map);
