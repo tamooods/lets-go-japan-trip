@@ -324,9 +324,7 @@ function buildPopup(d, i) {
   pop.appendChild(acts);
 
   // Detail button
-  const detailBtn = el('button', 'pop-btn detail-btn', '📋 รายละเอียด');
-  detailBtn.style.cssText =
-    'display:block;width:100%;margin-top:0.6rem;padding:0.4rem 0;border:1px solid var(--red);border-radius:6px;background:var(--red);color:#fff;cursor:pointer;font-family:inherit;font-size:0.8rem;text-align:center;';
+  const detailBtn = el('button', 'pop-detail-btn', '📋 รายละเอียด');
   detailBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     map.closePopup();

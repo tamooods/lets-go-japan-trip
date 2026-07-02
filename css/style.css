@@ -906,12 +906,26 @@ body::before {
 
 /* ─── Leaflet popup overrides ─── */
 .leaflet-popup-content-wrapper {
-  background: var(--warm) !important;
-  border: none !important;
-  border-radius: 14px !important;
-  box-shadow: 0 8px 32px rgba(42, 32, 24, 0.18) !important;
+  background: var(--paper) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  box-shadow: 2px 6px 20px rgba(74, 56, 38, 0.22) !important;
   padding: 0 !important;
   overflow: hidden;
+  position: relative;
+}
+
+.leaflet-popup-content-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 40px;
+  height: 16px;
+  background: var(--tape);
+  transform: rotate(-6deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  z-index: 2;
 }
 
 .leaflet-popup-content {
@@ -978,7 +992,7 @@ body::before {
 
 .pop-img-wrap {
   margin: -18px -22px 12px;
-  border-radius: 2px 2px 0 0;
+  border-radius: 7px 7px 0 0;
   overflow: hidden;
   height: 130px;
   background: #f0ede3;
@@ -1042,6 +1056,7 @@ body::before {
 
 .pop-img-placeholder {
   margin: -18px -22px 12px;
+  border-radius: 7px 7px 0 0;
   height: 130px;
   background: linear-gradient(135deg, var(--cream) 0%, #ece6d4 100%);
   display: flex;
@@ -1144,22 +1159,39 @@ body::before {
 }
 
 .pop-travel {
-  border-top: 1px solid var(--line);
+  border-top: 1.5px dashed var(--line);
   padding-top: 10px;
   margin-top: 10px;
   font-size: 11px;
   color: var(--gray);
 }
 
+.pop-detail-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.7rem;
+  padding: 0.5rem 0;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--red) 0%, #b54d2e 100%);
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.pop-detail-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(200, 92, 58, 0.3);
+}
+
 .pop-distance {
   margin-top: 5px;
   font-size: 11px;
   color: var(--blue);
-}
-
-/* Dark mode popup */
-[data-theme='dark'] .leaflet-popup-content-wrapper {
-  background: #231f1b !important;
 }
 
 [data-theme='dark'] .pop-title {
