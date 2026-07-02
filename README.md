@@ -32,21 +32,26 @@ A premium Japanese travel itinerary planner with real-time collaboration, intera
 
 ```
 lets-go-japan-trip/
-├── index.html          # Entry point, all modals inline
-├── style.css          # Main stylesheet (~1.6K lines)
-├── script.js          # Core app logic, map rendering
-├── db.js              # Supabase client initialization
-├── auth.js            # Magic link authentication overlay
-├── realtime.js        # Supabase Realtime subscription
-├── editor.js          # Day edit modal with optimistic locking
-├── conflict.js        # Conflict resolution modal
-├── selection.js       # Member selection modal
-├── config.js          # Supabase credentials (gitignored)
-├── favicon.svg        # Japan-themed favicon
-├── vercel.json        # Vercel deployment config
+├── index.html           # Entry point, all modals inline
+├── config.js            # Supabase credentials (gitignored)
+├── config.example.js    # Config template
+├── vercel.json          # Vercel deployment config
+├── js/
+│   ├── db.js            # Supabase client initialization
+│   ├── day-places.js    # Day places CRUD
+│   ├── selection.js     # Member selection modal
+│   ├── realtime.js      # Supabase Realtime subscription
+│   ├── editor.js        # Day edit modal with optimistic locking
+│   ├── conflict.js      # Conflict resolution modal
+│   └── script.js        # Core app logic, map rendering
+├── css/
+│   └── style.css        # Main stylesheet (~1.6K lines)
+├── assets/
+│   ├── favicon.svg      # Japan-themed favicon
+│   └── bg-lofi.mp3      # Background music
 └── supabase/
-    ├── migrations/    # DB schema migrations
-    └── seed.sql       # Initial data seeding
+    ├── migrations/      # DB schema migrations
+    └── seed.sql         # Initial data seeding
 ```
 
 ---
