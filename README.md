@@ -19,12 +19,12 @@ A premium Japanese travel itinerary planner with real-time collaboration, intera
 
 ## 🛠 Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Frontend** | Vanilla HTML, CSS, JavaScript (no build step) |
-| **Map** | Leaflet.js + Esri World Light Gray tiles |
-| **Database** | Supabase (PostgreSQL + Realtime) |
-| **Deployment** | Vercel |
+| Layer          | Technology                                    |
+| -------------- | --------------------------------------------- |
+| **Frontend**   | Vanilla HTML, CSS, JavaScript (no build step) |
+| **Map**        | Leaflet.js + Esri World Light Gray tiles      |
+| **Database**   | Supabase (PostgreSQL + Realtime)              |
+| **Deployment** | Vercel                                        |
 
 ---
 
@@ -104,13 +104,13 @@ http://localhost:5500
 
 ## 🎨 Design System
 
-| Element | Value |
-|---------|-------|
-| **Primary Color** | Terracotta Red (`#c85c3a`) |
-| **Background** | Cream (`#f4edd8`) / Warm (`#faf7ee`) |
-| **Typography** | Noto Sans Thai, Cormorant Garamond, Libre Baskerville |
-| **Border Radius** | 14–20px (cards), 20px (buttons), 50% (icons) |
-| **Dark Mode** | Inverted palette with stone-900 backgrounds |
+| Element           | Value                                                 |
+| ----------------- | ----------------------------------------------------- |
+| **Primary Color** | Terracotta Red (`#c85c3a`)                            |
+| **Background**    | Cream (`#f4edd8`) / Warm (`#faf7ee`)                  |
+| **Typography**    | Noto Sans Thai, Cormorant Garamond, Libre Baskerville |
+| **Border Radius** | 14–20px (cards), 20px (buttons), 50% (icons)          |
+| **Dark Mode**     | Inverted palette with stone-900 backgrounds           |
 
 ---
 

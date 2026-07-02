@@ -1,14 +1,18 @@
 // realtime.js
 function initRealtime() {
   db.channel('days-changes')
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'days',
-      filter: 'itinerary_id=eq.' + window.TRIP_ITINERARY_ID,
-    }, (payload) => {
-      handleDayChange(payload);
-    })
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'days',
+        filter: 'itinerary_id=eq.' + window.TRIP_ITINERARY_ID,
+      },
+      (payload) => {
+        handleDayChange(payload);
+      },
+    )
     .subscribe();
 }
 
@@ -18,7 +22,7 @@ function handleDayChange(payload) {
   const oldRow = payload.old;
 
   if (eventType === 'UPDATE') {
-    const idx = DAYS.findIndex(d => d.id === newRow.id);
+    const idx = DAYS.findIndex((d) => d.id === newRow.id);
     if (idx === -1) return;
     if (window._editingDayId === newRow.id) {
       showServerUpdatedIndicator(newRow);
@@ -37,7 +41,7 @@ function handleDayChange(payload) {
   }
 
   if (eventType === 'DELETE') {
-    DAYS = DAYS.filter(d => d.id !== oldRow.id);
+    DAYS = DAYS.filter((d) => d.id !== oldRow.id);
     renderSidebar(DAYS);
     renderMap(DAYS);
   }
@@ -46,13 +50,17 @@ function handleDayChange(payload) {
 // ─── Day Places Realtime ──────────────────────────
 function initPlaceRealtime() {
   db.channel('day-places-changes')
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'day_places',
-    }, (payload) => {
-      handlePlaceChange(payload);
-    })
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'day_places',
+      },
+      (payload) => {
+        handlePlaceChange(payload);
+      },
+    )
     .subscribe();
 }
 
@@ -61,11 +69,11 @@ function handlePlaceChange(payload) {
   // Only refresh if the change is for the currently viewed day
   const place = payload.new;
   const old = payload.old;
-  const dayId = place ? place.day_id : (old ? old.day_id : null);
+  const dayId = place ? place.day_id : old ? old.day_id : null;
   if (dayId !== DAYS[detailDayIndex]?.id) return;
 
   // Debounce: reload places and re-render
-  loadDayPlaces(dayId).then(fresh => {
+  loadDayPlaces(dayId).then((fresh) => {
     places = fresh;
     renderDayDetail(DAYS[detailDayIndex]);
     renderPlaceMap(DAYS[detailDayIndex]);

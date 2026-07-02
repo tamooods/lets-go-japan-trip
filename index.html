@@ -6,10 +6,7 @@
     <title>Let's Go Japan ✈</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
     <link rel="apple-touch-icon" href="assets/favicon.svg" />
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Sans+Thai:wght@300;400;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap"
@@ -136,11 +133,7 @@
           <h3 id="editor-title">แก้ไขแผน</h3>
           <button id="editor-close" class="modal-close">&#x2715;</button>
         </div>
-        <p
-          id="editor-server-update"
-          class="server-update-notice"
-          style="display: none"
-        ></p>
+        <p id="editor-server-update" class="server-update-notice" style="display: none"></p>
         <label class="modal-label"
           >สถานที่
           <input type="text" id="editor-place" class="modal-input" />
@@ -162,9 +155,7 @@
           <h3>&#x26A0;&#xFE0F; ข้อมูลถูกแก้โดยคนอื่น</h3>
           <button id="conflict-close" class="modal-close">&#x2715;</button>
         </div>
-        <p class="conflict-desc">
-          ข้อมูลใน server เปลี่ยนไปแล้วขณะที่คุณกำลังแก้
-        </p>
+        <p class="conflict-desc">ข้อมูลใน server เปลี่ยนไปแล้วขณะที่คุณกำลังแก้</p>
         <div class="conflict-compare">
           <div class="conflict-col">
             <div class="conflict-col-label">ของคุณ</div>
@@ -176,12 +167,8 @@
           </div>
         </div>
         <div class="modal-actions">
-          <button id="conflict-overwrite" class="btn-primary">
-            บันทึกของฉัน (เขียนทับ)
-          </button>
-          <button id="conflict-discard" class="btn-secondary">
-            ใช้ของ server
-          </button>
+          <button id="conflict-overwrite" class="btn-primary">บันทึกของฉัน (เขียนทับ)</button>
+          <button id="conflict-discard" class="btn-secondary">ใช้ของ server</button>
         </div>
       </div>
     </div>
@@ -203,9 +190,7 @@
               aria-required="true"
               placeholder="เช่น วัดคินคะคุจิ"
             />
-            <span id="place-editor-name-error" class="field-error hidden"
-              >กรุณาใส่ชื่อสถานที่</span
-            >
+            <span id="place-editor-name-error" class="field-error hidden">กรุณาใส่ชื่อสถานที่</span>
           </label>
           <label class="modal-label"
             >✅ กิจกรรม (แต่ละบรรทัด = 1 กิจกรรม)
@@ -218,13 +203,7 @@
           </label>
           <label class="modal-label"
             >💰 ค่าใช้จ่าย (¥)
-            <input
-              type="number"
-              id="place-editor-expense"
-              class="modal-input"
-              value="0"
-              min="0"
-            />
+            <input type="number" id="place-editor-expense" class="modal-input" value="0" min="0" />
           </label>
           <label class="modal-label"
             >👥 หารโดย
@@ -239,11 +218,7 @@
                 class="modal-input"
                 placeholder="ค้นหาชื่อสถานที่..."
               />
-              <button
-                id="place-editor-search-btn"
-                class="btn-secondary btn-sm"
-                type="button"
-              >
+              <button id="place-editor-search-btn" class="btn-secondary btn-sm" type="button">
                 🔍
               </button>
               <button
@@ -283,9 +258,7 @@
 
     <div id="stats-widget" class="stats-widget hidden">
       <div class="stats-pill">
-        <span class="stats-pill-text"
-          >✈️ <span id="stats-pill-value">--</span></span
-        >
+        <span class="stats-pill-text">✈️ <span id="stats-pill-value">--</span></span>
       </div>
       <div class="stats-expanded">
         <div class="stats-row">

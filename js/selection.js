@@ -8,7 +8,7 @@ async function ensureMemberSelected() {
     try {
       const members = await loadMembers();
       window.members = members;
-    } catch (e) {
+    } catch {
       window.members = [];
     }
     return;
@@ -18,7 +18,7 @@ async function ensureMemberSelected() {
   try {
     members = await loadMembers();
     window.members = members;
-  } catch (err) {
+  } catch {
     alert('ไม่สามารถโหลดรายชื่อสมาชิกได้ กรุณาลองใหม่');
     location.reload();
     return;
@@ -38,8 +38,8 @@ async function ensureMemberSelected() {
 
   list.textContent = '';
 
-  return new Promise(resolve => {
-    members.forEach(m => {
+  return new Promise((resolve) => {
+    members.forEach((m) => {
       const btn = el('button', 'member-btn', m.name);
       btn.onclick = () => {
         localStorage.setItem('selectedMemberId', m.id);

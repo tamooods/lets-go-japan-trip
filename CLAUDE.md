@@ -15,6 +15,10 @@ Quick commands
 - Serve locally (no build):
   - npx serve .
   - or open index.html directly in a browser
+- Lint & format (requires `npm install` first):
+  - npm run format   — auto-format with Prettier
+  - npm run lint     — ESLint check
+  - npm run check    — both lint + format check
 - Runtime config (required):
   - Copy and edit config.example.js → config.js and fill Supabase credentials before running locally. (config.js is gitignored in this repo.)
   - On Vercel the repo uses vercel.json to write a runtime config.js at build time (see Deploy below).
@@ -36,6 +40,9 @@ High-level architecture (big-picture)
 - Script load order matters (the app relies on globals):
   - config.js → db.js → selection.js → realtime.js → editor.js → conflict.js → script.js
 - File responsibilities (high-level):
+
+- .editorconfig, .prettierrc, eslint.config.js — Dev tooling config (indent, formatting, lint rules)
+- package.json — npm scripts for lint/format (no runtime dependencies)
   - index.html — entry point, splash screen, sidebar markup, all modals (editor, conflict, selection) inline
   - config.example.js / config.js — runtime values (SUPABASE URL/KEY, TRIP_ITINERARY_ID)
   - style.css — ~1900 lines: theme vars, splash, sidebar, map, modals, animations

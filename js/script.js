@@ -1,10 +1,11 @@
 // script.js
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.asin(Math.sqrt(a));
 }
 
@@ -15,22 +16,29 @@ function el(tag, cls, text) {
   return e;
 }
 function append(parent, ...children) {
-  children.forEach(c => parent.appendChild(c));
+  children.forEach((c) => parent.appendChild(c));
   return parent;
 }
 
 let DAYS = [];
-let places = [], placeMarkers = [], isDetailMode = false;
-let map, markers = [], curIdx = null;
+let places = [],
+  placeMarkers = [],
+  isDetailMode = false;
+let map,
+  markers = [],
+  curIdx = null;
 let tileLayer = null;
-let detailDayIndex = null, detailBackBtn = null;
+let detailDayIndex = null,
+  detailBackBtn = null;
 
 (function initTheme() {
   const saved = localStorage.getItem('theme');
   if (saved === 'dark') document.documentElement.dataset.theme = 'dark';
   const btn = document.getElementById('themeToggle');
-  const sunIcon = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
-  const moonIcon = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  const sunIcon =
+    '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+  const moonIcon =
+    '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
   function syncIcon() {
     btn.innerHTML = document.documentElement.dataset.theme === 'dark' ? sunIcon : moonIcon;
   }
@@ -47,13 +55,21 @@ let detailDayIndex = null, detailBackBtn = null;
     syncIcon();
     if (map) {
       const tiles = {
-        light: { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attr: '\u00a9 <a href="https://carto.com/">CARTO</a> \u00a9 <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>' },
-        dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr: '\u00a9 <a href="https://carto.com/">CARTO</a> \u00a9 <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>' },
+        light: {
+          url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+          attr: '\u00a9 <a href="https://carto.com/">CARTO</a> \u00a9 <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+        },
+        dark: {
+          url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+          attr: '\u00a9 <a href="https://carto.com/">CARTO</a> \u00a9 <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+        },
       };
       const key = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
       if (tileLayer) tileLayer.remove();
       tileLayer = L.tileLayer(tiles[key].url, {
-        maxZoom: 19, subdomains: 'abcd', attribution: tiles[key].attr,
+        maxZoom: 19,
+        subdomains: 'abcd',
+        attribution: tiles[key].attr,
       }).addTo(map);
     }
   });
@@ -63,26 +79,31 @@ let detailDayIndex = null, detailBackBtn = null;
 (function initMusic() {
   const audio = document.getElementById('lofi-audio');
   const btn = document.getElementById('musicToggle');
-  
+
   audio.volume = 0.15;
-  
+
   // Muted/Off icon - music note with slash
-  const musicOffIcon = '<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>';
-  
+  const musicOffIcon =
+    '<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>';
+
   // Playing/On icon - equalizer bars
-  const musicOnIcon = '<div class="music-icon" style="display:flex;gap:2px;align-items:flex-end;justify-content:center;"><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span></div>';
-  
+  const musicOnIcon =
+    '<div class="music-icon" style="display:flex;gap:2px;align-items:flex-end;justify-content:center;"><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span></div>';
+
   btn.innerHTML = musicOffIcon;
-  
+
   btn.addEventListener('click', () => {
     if (audio.paused) {
-      audio.play().then(() => {
-        btn.classList.add('playing');
-        btn.innerHTML = musicOnIcon;
-        localStorage.setItem('musicPlaying', 'true');
-      }).catch(err => {
-        console.log('Autoplay blocked, user interaction required');
-      });
+      audio
+        .play()
+        .then(() => {
+          btn.classList.add('playing');
+          btn.innerHTML = musicOnIcon;
+          localStorage.setItem('musicPlaying', 'true');
+        })
+        .catch((err) => {
+          console.log('Autoplay blocked, user interaction required');
+        });
     } else {
       audio.pause();
       btn.classList.remove('playing');
@@ -90,13 +111,16 @@ let detailDayIndex = null, detailBackBtn = null;
       localStorage.setItem('musicPlaying', 'false');
     }
   });
-  
+
   // Restore music state
   if (localStorage.getItem('musicPlaying') === 'true') {
-    audio.play().then(() => {
-      btn.classList.add('playing');
-      btn.innerHTML = musicOnIcon;
-    }).catch(() => {});
+    audio
+      .play()
+      .then(() => {
+        btn.classList.add('playing');
+        btn.innerHTML = musicOnIcon;
+      })
+      .catch(() => {});
   }
 })();
 
@@ -174,14 +198,14 @@ function renderSidebar(days) {
     const det = d.details;
     const item = el('div', 'day-item');
     item.dataset.i = i;
-    item.style.animationDelay = (i * 0.07 + 0.1) + 's';
+    item.style.animationDelay = i * 0.07 + 0.1 + 's';
 
     const rowTop = el('div', 'day-row');
     const pin = append(el('div', 's-pin'), el('span', 's-pin-num', String(i + 1)));
     const info = el('div', 'day-info');
     const meta = el('div', 'day-meta');
-    (det.badges || []).forEach(b =>
-      meta.appendChild(el('span', ('badge ' + (b.cls || '')).trim(), b.label))
+    (det.badges || []).forEach((b) =>
+      meta.appendChild(el('span', ('badge ' + (b.cls || '')).trim(), b.label)),
     );
     if (det.travel) {
       meta.appendChild(el('span', 'travel-tag', det.travel.icon + ' ' + det.travel.time));
@@ -189,7 +213,10 @@ function renderSidebar(days) {
 
     const editBtn = el('button', 'edit-day-btn', '\u270f\ufe0f');
     editBtn.title = 'แก้ไขแผนวันนี้';
-    editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditor(d); });
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openEditor(d);
+    });
 
     const dayPlace = el('div', 'day-place');
     dayPlace.appendChild(el('span', 'place-name', det.place));
@@ -206,8 +233,10 @@ function renderSidebar(days) {
       if (leg) leg.setStyle({ weight: 1.5, opacity: 0.45, dashArray: '5 7' });
     });
     if (d.last_editor_name) {
-      const stamp = el('small', 'day-editor',
-        'แก้โดย: ' + d.last_editor_name + ' · เมื่อ ' + formatTimeAgo(d.last_editor_at)
+      const stamp = el(
+        'small',
+        'day-editor',
+        'แก้โดย: ' + d.last_editor_name + ' · เมื่อ ' + formatTimeAgo(d.last_editor_at),
       );
       append(item, stamp);
     }
@@ -233,7 +262,8 @@ function buildPopup(d, i) {
       imgWrap.classList.add('pop-img-error');
       img.style.display = 'none';
       const fallback = el('div', 'pop-img-fallback');
-      fallback.innerHTML = '<svg viewBox="0 0 64 64" width="48" height="48"><circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" stroke-width="2" opacity="0.2"/><path d="M24 42l6-8 4 4 8-10 8 14H26l-2-10z" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3"/></svg>';
+      fallback.innerHTML =
+        '<svg viewBox="0 0 64 64" width="48" height="48"><circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" stroke-width="2" opacity="0.2"/><path d="M24 42l6-8 4 4 8-10 8 14H26l-2-10z" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3"/></svg>';
       imgWrap.appendChild(fallback);
     };
 
@@ -241,12 +271,11 @@ function buildPopup(d, i) {
     pop.appendChild(imgWrap);
   } else {
     const ph = el('div', 'pop-img-placeholder');
-    ph.innerHTML = '<svg viewBox="0 0 64 64" width="48" height="48"><circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" stroke-width="2" opacity="0.2"/><path d="M24 42l6-8 4 4 8-10 8 14H26l-2-10z" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3"/></svg>';
+    ph.innerHTML =
+      '<svg viewBox="0 0 64 64" width="48" height="48"><circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" stroke-width="2" opacity="0.2"/><path d="M24 42l6-8 4 4 8-10 8 14H26l-2-10z" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3"/></svg>';
     pop.appendChild(ph);
   }
-  append(pop,
-    el('div', 'pop-label', 'Day ' + (i + 1)),
-  );
+  append(pop, el('div', 'pop-label', 'Day ' + (i + 1)));
 
   const titleEl = el('div', 'pop-title');
   const placeParts = det.place.split('_');
@@ -261,12 +290,13 @@ function buildPopup(d, i) {
   }
 
   const acts = el('ul', 'pop-acts');
-  (det.acts || []).forEach(a => acts.appendChild(el('li', null, a)));
+  (det.acts || []).forEach((a) => acts.appendChild(el('li', null, a)));
   pop.appendChild(acts);
 
   // Detail button
   const detailBtn = el('button', 'pop-btn detail-btn', '📋 รายละเอียด');
-  detailBtn.style.cssText = 'display:block;width:100%;margin-top:0.6rem;padding:0.4rem 0;border:1px solid var(--red);border-radius:6px;background:var(--red);color:#fff;cursor:pointer;font-family:inherit;font-size:0.8rem;text-align:center;';
+  detailBtn.style.cssText =
+    'display:block;width:100%;margin-top:0.6rem;padding:0.4rem 0;border:1px solid var(--red);border-radius:6px;background:var(--red);color:#fff;cursor:pointer;font-family:inherit;font-size:0.8rem;text-align:center;';
   detailBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     map.closePopup();
@@ -282,16 +312,18 @@ function renderMap(days) {
     const tiles = {
       light: {
         url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        attr: '© <a href="https://carto.com/">CARTO</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+        attr: '© <a href="https://carto.com/">CARTO</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
       },
       dark: {
         url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        attr: '© <a href="https://carto.com/">CARTO</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+        attr: '© <a href="https://carto.com/">CARTO</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
       },
     };
     const key = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
     tileLayer = L.tileLayer(tiles[key].url, {
-      maxZoom: 19, subdomains: 'abcd', attribution: tiles[key].attr,
+      maxZoom: 19,
+      subdomains: 'abcd',
+      attribution: tiles[key].attr,
     }).addTo(map);
 
     // Custom zoom controls with glassmorphism
@@ -299,12 +331,12 @@ function renderMap(days) {
     map.addControl(zoomControl);
   }
 
-  markers.forEach(m => map.removeLayer(m));
+  markers.forEach((m) => map.removeLayer(m));
   markers = [];
 
-  const coords = days.map(d => [d.details.lat, d.details.lng]);
+  const coords = days.map((d) => [d.details.lat, d.details.lng]);
 
-  (window._legLines || []).forEach(l => map.removeLayer(l));
+  (window._legLines || []).forEach((l) => map.removeLayer(l));
   window._legLines = [];
   for (let i = 1; i < coords.length; i++) {
     const leg = L.polyline([coords[i - 1], coords[i]], {
@@ -319,7 +351,7 @@ function renderMap(days) {
 
   map.once('zoomend', () => {
     const zoom = map.getZoom();
-    window._legLines.forEach(leg => {
+    window._legLines.forEach((leg) => {
       leg.setStyle({ opacity: zoom > 8 ? 0.6 : 0.3 });
     });
   });
@@ -336,7 +368,9 @@ function renderMap(days) {
     const icon = L.divIcon({
       className: '',
       html: mkDiv.outerHTML,
-      iconSize: [34, 42], iconAnchor: [17, 41], popupAnchor: [0, -44],
+      iconSize: [34, 42],
+      iconAnchor: [17, 41],
+      popupAnchor: [0, -44],
     });
 
     const m = L.marker([d.details.lat, d.details.lng], { icon })
@@ -352,10 +386,13 @@ function renderMap(days) {
     mkEl.style.opacity = '0';
     mkEl.style.transform = 'rotate(-45deg) scale(0.2)';
     mkEl.style.transition = 'opacity 0.4s, transform 0.5s cubic-bezier(0.34,1.56,0.64,1)';
-    setTimeout(() => {
-      mkEl.style.opacity = '1';
-      mkEl.style.transform = 'rotate(-45deg) scale(1)';
-    }, 400 + i * 110);
+    setTimeout(
+      () => {
+        mkEl.style.opacity = '1';
+        mkEl.style.transform = 'rotate(-45deg) scale(1)';
+      },
+      400 + i * 110,
+    );
   });
 
   map.fitBounds(L.latLngBounds(coords), { padding: [40, 60] });
@@ -364,7 +401,7 @@ function renderMap(days) {
 function setActive(i) {
   if (isDetailMode) return;
   if (!DAYS[i]) return;
-  document.querySelectorAll('.day-item').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.day-item').forEach((e) => e.classList.remove('active'));
   const activeItem = document.querySelectorAll('.day-item')[i];
   if (activeItem) {
     activeItem.classList.add('active');
@@ -386,14 +423,21 @@ function goTo(i) {
   if (window.innerWidth <= 640 && window._closeMobileDrawer) window._closeMobileDrawer();
 }
 
-const FLOATIES = ['\ud83c\udf38', '\ud83c\udf38', '\ud83c\udf38', '\u2744\ufe0f', '\u2744\ufe0f', '\ud83c\udf38'];
+const FLOATIES = [
+  '\ud83c\udf38',
+  '\ud83c\udf38',
+  '\ud83c\udf38',
+  '\u2744\ufe0f',
+  '\u2744\ufe0f',
+  '\ud83c\udf38',
+];
 function spawnPetal() {
   const container = document.getElementById('petals');
   const petal = el('span', 'p', FLOATIES[Math.floor(Math.random() * FLOATIES.length)]);
-  petal.style.left = (Math.random() * 100) + 'vw';
-  petal.style.fontSize = (10 + Math.random() * 9) + 'px';
-  petal.style.animationDuration = (7 + Math.random() * 8) + 's';
-  petal.style.animationDelay = (Math.random() * 1.5) + 's';
+  petal.style.left = Math.random() * 100 + 'vw';
+  petal.style.fontSize = 10 + Math.random() * 9 + 'px';
+  petal.style.animationDuration = 7 + Math.random() * 8 + 's';
+  petal.style.animationDelay = Math.random() * 1.5 + 's';
   container.appendChild(petal);
   petal.addEventListener('animationend', () => petal.remove(), { once: true });
 }
@@ -406,9 +450,17 @@ setInterval(spawnPetal, 950);
   const backdrop = document.createElement('div');
   backdrop.id = 'sidebar-backdrop';
   document.body.appendChild(backdrop);
-  function isMobile() { return window.innerWidth <= 640; }
-  function openDrawer() { sidebar.classList.add('open'); backdrop.classList.add('active'); }
-  function closeDrawer() { sidebar.classList.remove('open'); backdrop.classList.remove('active'); }
+  function isMobile() {
+    return window.innerWidth <= 640;
+  }
+  function openDrawer() {
+    sidebar.classList.add('open');
+    backdrop.classList.add('active');
+  }
+  function closeDrawer() {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('active');
+  }
   header.addEventListener('click', (e) => {
     if (!isMobile()) return;
     e.stopPropagation();
@@ -427,8 +479,10 @@ async function enterDetail(i) {
   detailDayIndex = i;
 
   // Hide day markers, show place markers
-  markers.forEach(m => { if (map.hasLayer(m)) map.removeLayer(m); });
-  (window._legLines || []).forEach(l => map.removeLayer(l));
+  markers.forEach((m) => {
+    if (map.hasLayer(m)) map.removeLayer(m);
+  });
+  (window._legLines || []).forEach((l) => map.removeLayer(l));
 
   // Load places
   places = await loadDayPlaces(day.id);
@@ -461,26 +515,29 @@ function exitDetail() {
   places = [];
 
   // Clean up place markers
-  placeMarkers.forEach(m => map.removeLayer(m));
+  placeMarkers.forEach((m) => map.removeLayer(m));
   placeMarkers = [];
 
   // Restore day markers
-  markers.forEach(m => m.addTo(map));
+  markers.forEach((m) => m.addTo(map));
 
   // Restore polyline legs
-  (window._legLines || []).forEach(l => l.addTo(map));
+  (window._legLines || []).forEach((l) => l.addTo(map));
 
   // Restore sidebar
   const listEl = document.getElementById('dayList');
   listEl.classList.remove('day-place-list');
   listEl.classList.add('day-list');
 
-  if (detailBackBtn) { detailBackBtn.remove(); detailBackBtn = null; }
+  if (detailBackBtn) {
+    detailBackBtn.remove();
+    detailBackBtn = null;
+  }
 
   renderSidebar(DAYS);
 
   // Restore map bounds
-  const coords = DAYS.map(d => [d.details.lat, d.details.lng]);
+  const coords = DAYS.map((d) => [d.details.lat, d.details.lng]);
   if (coords.length) {
     map.fitBounds(L.latLngBounds(coords), { padding: [40, 60] });
   }
@@ -491,15 +548,13 @@ function renderDayDetail(day) {
   listEl.textContent = '';
 
   if (!places.length) {
-    const empty = el('div', 'place-empty',
-      'ยังไม่มีสถานที่ในวันนี้\nคลิก "+ Add Place" เพิ่มเลย!'
-    );
+    const empty = el('div', 'place-empty', 'ยังไม่มีสถานที่ในวันนี้\nคลิก "+ Add Place" เพิ่มเลย!');
     listEl.appendChild(empty);
   } else {
     places.forEach((p, idx) => {
       const card = el('div', 'place-card');
       card.dataset.placeId = p.id;
-      card.style.animationDelay = (idx * 0.05 + 0.1) + 's';
+      card.style.animationDelay = idx * 0.05 + 0.1 + 's';
 
       const row = el('div', 'place-card-row');
       const pin = el('div', 'place-pin', String(idx + 1));
@@ -507,19 +562,25 @@ function renderDayDetail(day) {
       body.appendChild(el('div', 'place-card-name', p.name));
 
       if (p.acts && p.acts.length) {
-        const actsArr = Array.isArray(p.acts) ? p.acts : (typeof p.acts === 'string' ? JSON.parse(p.acts) : []);
+        const actsArr = Array.isArray(p.acts)
+          ? p.acts
+          : typeof p.acts === 'string'
+            ? JSON.parse(p.acts)
+            : [];
         if (actsArr.length) body.appendChild(el('div', 'place-card-acts', actsArr.join(' · ')));
       }
 
       const meta = el('div', 'place-card-meta');
       if (p.expense > 0) {
-        meta.appendChild(el('span', 'place-card-expense', '¥' + Number(p.expense).toLocaleString()));
+        meta.appendChild(
+          el('span', 'place-card-expense', '¥' + Number(p.expense).toLocaleString()),
+        );
       }
       if (p.split_among && p.split_among.length && window.members) {
         const names = p.split_among
-          .map(uid => window.members.find(m => m.id === uid))
+          .map((uid) => window.members.find((m) => m.id === uid))
           .filter(Boolean)
-          .map(m => m.name)
+          .map((m) => m.name)
           .join(', ');
         if (names) meta.appendChild(el('span', 'place-card-split', '👥 ' + names));
       }
@@ -529,9 +590,15 @@ function renderDayDetail(day) {
       // Card actions
       const actions = el('div', 'place-card-actions');
       const editBtn = el('button', 'place-edit-btn', '✏️ แก้ไข');
-      editBtn.addEventListener('click', (e) => { e.stopPropagation(); openPlaceEditor(day, p); });
+      editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openPlaceEditor(day, p);
+      });
       const delBtn = el('button', 'place-del-btn', '✖ ลบ');
-      delBtn.addEventListener('click', (e) => { e.stopPropagation(); deletePlaceHandler(p); });
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deletePlaceHandler(p);
+      });
       append(actions, editBtn, delBtn);
       body.appendChild(actions);
       append(row, pin, body);
@@ -545,7 +612,9 @@ function renderDayDetail(day) {
       append(row, focusBtn);
       append(card, row);
 
-      card.addEventListener('click', () => { if (p.lat && p.lng) focusPlace(idx); });
+      card.addEventListener('click', () => {
+        if (p.lat && p.lng) focusPlace(idx);
+      });
       listEl.appendChild(card);
     });
   }
@@ -557,23 +626,27 @@ function renderDayDetail(day) {
 }
 
 function renderPlaceMap(day) {
-  placeMarkers.forEach(m => map.removeLayer(m));
+  placeMarkers.forEach((m) => map.removeLayer(m));
   placeMarkers = [];
 
-  const validPlaces = places.filter(p => p.lat && p.lng);
+  const validPlaces = places.filter((p) => p.lat && p.lng);
   if (!validPlaces.length) {
     // If no places with coords, just show day's main location
     map.flyTo([day.details.lat, day.details.lng], 12, { duration: 0.8 });
     return;
   }
 
-  const coords = validPlaces.map(p => [p.lat, p.lng]);
+  const coords = validPlaces.map((p) => [p.lat, p.lng]);
 
   // Polyline between places — direct connections by sort_index
   for (let i = 1; i < validPlaces.length; i++) {
     L.polyline([coords[i - 1], coords[i]], {
-      color: '#5b7fa0', weight: 2, opacity: 0.5,
-      lineCap: 'round', lineJoin: 'round', dashArray: '4 6',
+      color: '#5b7fa0',
+      weight: 2,
+      opacity: 0.5,
+      lineCap: 'round',
+      lineJoin: 'round',
+      dashArray: '4 6',
     }).addTo(map);
   }
 
@@ -590,7 +663,9 @@ function renderPlaceMap(day) {
     const icon = L.divIcon({
       className: '',
       html: mkDiv.outerHTML,
-      iconSize: [34, 42], iconAnchor: [17, 41], popupAnchor: [0, -44],
+      iconSize: [34, 42],
+      iconAnchor: [17, 41],
+      popupAnchor: [0, -44],
     });
 
     const m = L.marker([p.lat, p.lng], { icon }).addTo(map);
@@ -610,7 +685,7 @@ function focusPlace(idx) {
     if (placeMarkers[idx]) placeMarkers[idx].openPopup();
   });
   // Highlight card
-  document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.place-card').forEach((c) => c.classList.remove('active'));
   const cards = document.querySelectorAll('.place-card');
   if (cards[idx]) cards[idx].classList.add('active');
 }
@@ -636,7 +711,9 @@ async function initApp() {
     if (DAYS.length < 2) return;
     const origin = DAYS[0].details.lat + ',' + DAYS[0].details.lng;
     const dest = DAYS[DAYS.length - 1].details.lat + ',' + DAYS[DAYS.length - 1].details.lng;
-    const waypoints = DAYS.slice(1, -1).map(d => d.details.lat + ',' + d.details.lng).join('|');
+    const waypoints = DAYS.slice(1, -1)
+      .map((d) => d.details.lat + ',' + d.details.lng)
+      .join('|');
     let url = 'https://www.google.com/maps/dir/?api=1&origin=' + origin + '&destination=' + dest;
     if (waypoints) url += '&waypoints=' + waypoints;
     window.open(url, '_blank');

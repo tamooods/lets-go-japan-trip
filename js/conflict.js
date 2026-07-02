@@ -2,7 +2,7 @@
 let _conflictContext = null;
 
 function fmtDetails(det) {
-  const acts = (det.acts || []).map(a => '- ' + a).join('\n');
+  const acts = (det.acts || []).map((a) => '- ' + a).join('\n');
   return 'สถานที่: ' + det.place + '\nกิจกรรม:\n' + acts;
 }
 
@@ -28,9 +28,16 @@ document.getElementById('conflict-overwrite').addEventListener('click', async ()
     p_actor: window.currentMember ? window.currentMember.name : null,
     p_actor_at: new Date().toISOString(),
   });
-  if (error || !data.ok) { alert('บันทึกไม่สำเร็จ กรุณาลองใหม่'); return; }
-  const idx = DAYS.findIndex(d => d.id === editingDay.id);
-  if (idx !== -1) { DAYS[idx] = data.row; renderSidebar(DAYS); renderMap(DAYS); }
+  if (error || !data.ok) {
+    alert('บันทึกไม่สำเร็จ กรุณาลองใหม่');
+    return;
+  }
+  const idx = DAYS.findIndex((d) => d.id === editingDay.id);
+  if (idx !== -1) {
+    DAYS[idx] = data.row;
+    renderSidebar(DAYS);
+    renderMap(DAYS);
+  }
   closeConflictModal();
   closeEditor();
 });
@@ -38,8 +45,12 @@ document.getElementById('conflict-overwrite').addEventListener('click', async ()
 document.getElementById('conflict-discard').addEventListener('click', () => {
   if (!_conflictContext) return;
   const serverRow = _conflictContext.serverRow;
-  const idx = DAYS.findIndex(d => d.id === serverRow.id);
-  if (idx !== -1) { DAYS[idx] = serverRow; renderSidebar(DAYS); renderMap(DAYS); }
+  const idx = DAYS.findIndex((d) => d.id === serverRow.id);
+  if (idx !== -1) {
+    DAYS[idx] = serverRow;
+    renderSidebar(DAYS);
+    renderMap(DAYS);
+  }
   closeConflictModal();
   closeEditor();
 });

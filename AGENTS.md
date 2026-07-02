@@ -2,6 +2,19 @@
 
 Collaborative trip planner for ~10 friends. Vanilla JS static site, no bundler, no npm. Backed by Supabase (Postgres + Realtime + Auth). UI language is Thai (ภาษาไทย).
 
+## Code Quality
+
+ESLint (JS lint) + Prettier (auto-formatter) + EditorConfig.
+
+```sh
+npm run format       # Prettier — จัดรูปแบบโค้ด
+npm run format:check # เช็คว่าถูก format หรือยัง
+npm run lint         # ESLint — ตรวจหา bug
+npm run check        # lint + format check
+```
+
+Config files: `.editorconfig`, `.prettierrc`, `eslint.config.js`
+
 ## Local Dev
 
 No build step. Serve files statically:
@@ -26,16 +39,16 @@ Migrations and seed are run manually in the Supabase SQL Editor (no CLI runner):
 
 ## Architecture
 
-| File          | Role                                                          |
-| ------------- | ------------------------------------------------------------- |
-| `index.html`  | Single entry point; all modals inline                         |
-| `style.css`   | ~1900 lines: theme vars, splash, sidebar, map, modals, animations |
-| `script.js`   | Core app: `DAYS` global, `renderSidebar`, `renderMap`, `goTo` |
-| `db.js`       | Supabase client init + `loadDays()`, `loadMembers()`          |
-| `selection.js`| Member-identity modal; persists choice in localStorage        |
-| `realtime.js` | Supabase Realtime subscription on `days` table                |
-| `editor.js`   | Day edit modal + optimistic lock RPC call                     |
-| `conflict.js` | Conflict resolution modal (overwrite vs discard)              |
+| File           | Role                                                              |
+| -------------- | ----------------------------------------------------------------- |
+| `index.html`   | Single entry point; all modals inline                             |
+| `style.css`    | ~1900 lines: theme vars, splash, sidebar, map, modals, animations |
+| `script.js`    | Core app: `DAYS` global, `renderSidebar`, `renderMap`, `goTo`     |
+| `db.js`        | Supabase client init + `loadDays()`, `loadMembers()`              |
+| `selection.js` | Member-identity modal; persists choice in localStorage            |
+| `realtime.js`  | Supabase Realtime subscription on `days` table                    |
+| `editor.js`    | Day edit modal + optimistic lock RPC call                         |
+| `conflict.js`  | Conflict resolution modal (overwrite vs discard)                  |
 
 **Script load order matters** (no ES modules, CDN globals):
 `config.js` → `db.js` → `selection.js` → `realtime.js` → `editor.js` → `conflict.js` → `script.js`
