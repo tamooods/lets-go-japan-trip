@@ -637,7 +637,7 @@ function renderDayDetail(day) {
       card.style.animationDelay = idx * 0.05 + 0.1 + 's';
 
       const row = el('div', 'place-card-row');
-      const pin = el('div', 'place-pin', String(idx + 1));
+      const pin = append(el('div', 'place-pin'), el('span', null, String(idx + 1)));
       const body = el('div', 'place-card-body');
       body.appendChild(el('div', 'place-card-name', p.name));
 
