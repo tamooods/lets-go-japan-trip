@@ -151,12 +151,30 @@ function renderSplitCheckboxes(place) {
     container.innerHTML = '<span style="font-size:0.8rem;color:var(--gray)">ไม่มีสมาชิก</span>';
     return;
   }
+  const allLabel = document.createElement('label');
+  const allCb = document.createElement('input');
+  allCb.type = 'checkbox';
+  allCb.checked = selected.length === window.members.length;
+  allCb.addEventListener('change', () => {
+    container
+      .querySelectorAll('input[type="checkbox"][value]')
+      .forEach((cb) => (cb.checked = allCb.checked));
+  });
+  allLabel.appendChild(allCb);
+  allLabel.appendChild(document.createTextNode(' ทั้งหมด'));
+  container.appendChild(allLabel);
+
   window.members.forEach((m) => {
     const label = document.createElement('label');
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.value = m.id;
     cb.checked = selected.includes(m.id);
+    cb.addEventListener('change', () => {
+      allCb.checked = [...container.querySelectorAll('input[type="checkbox"][value]')].every(
+        (c) => c.checked
+      );
+    });
     label.appendChild(cb);
     label.appendChild(document.createTextNode(' ' + m.name));
     container.appendChild(label);
