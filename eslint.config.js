@@ -71,6 +71,7 @@ export default [
         updatePlace: 'readonly',
         deletePlace: 'readonly',
         searchPlaceName: 'readonly',
+        reverseGeocodePlace: 'readonly',
         // script.js — state globals
         DAYS: 'writable',
         map: 'writable',
