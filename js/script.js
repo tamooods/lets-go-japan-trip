@@ -18,6 +18,15 @@ function append(parent, ...children) {
   children.forEach((c) => parent.appendChild(c));
   return parent;
 }
+function icon(name, size) {
+  const i = document.createElement('i');
+  i.setAttribute('data-lucide', name);
+  if (size) {
+    i.setAttribute('width', size);
+    i.setAttribute('height', size);
+  }
+  return i;
+}
 
 function splitPlaceDate(det) {
   if (det.date) return { place: det.place, date: formatDateLabel(det.date) };
@@ -257,6 +266,7 @@ function renderSidebar(days) {
     }
     listEl.appendChild(item);
   });
+  lucide.createIcons();
 }
 
 function buildPopup(d, i) {
@@ -308,7 +318,8 @@ function buildPopup(d, i) {
   (det.acts || []).forEach((a) => acts.appendChild(el('li', null, a)));
   pop.appendChild(acts);
 
-  const detailBtn = el('button', 'pop-detail-btn', '📋 รายละเอียด');
+  const detailBtn = el('button', 'pop-detail-btn');
+  append(detailBtn, icon('file-text', 14), document.createTextNode(' รายละเอียด'));
   detailBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     map.closePopup();
@@ -340,6 +351,8 @@ function renderMap(days) {
 
     const zoomControl = L.control.zoom({ position: 'topright' });
     map.addControl(zoomControl);
+
+    map.on('popupopen', () => lucide.createIcons());
   }
 
   markers.forEach((m) => map.removeLayer(m));
@@ -622,18 +635,24 @@ function renderDayDetail(day) {
           .filter(Boolean)
           .map((m) => m.name)
           .join(', ');
-        if (names) meta.appendChild(el('span', 'place-card-split', '👥 ' + names));
+        if (names) {
+          const splitSpan = el('span', 'place-card-split');
+          append(splitSpan, icon('users', 12), document.createTextNode(' ' + names));
+          meta.appendChild(splitSpan);
+        }
       }
 
       body.appendChild(meta);
 
       const actions = el('div', 'place-card-actions');
-      const editBtn = el('button', 'place-edit-btn', '✏️ แก้ไข');
+      const editBtn = el('button', 'place-edit-btn');
+      append(editBtn, icon('pencil', 14), document.createTextNode(' แก้ไข'));
       editBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         openPlaceEditor(day, p);
       });
-      const delBtn = el('button', 'place-del-btn', '✖ ลบ');
+      const delBtn = el('button', 'place-del-btn');
+      append(delBtn, icon('x', 14), document.createTextNode(' ลบ'));
       delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         deletePlaceHandler(p);
@@ -642,7 +661,8 @@ function renderDayDetail(day) {
       body.appendChild(actions);
       append(row, pin, body);
 
-      const focusBtn = el('button', 'place-card-focus', '🗺️');
+      const focusBtn = el('button', 'place-card-focus');
+      focusBtn.appendChild(icon('map', 14));
       focusBtn.title = 'ดูบนแผนที่';
       focusBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -661,6 +681,7 @@ function renderDayDetail(day) {
   const addBtn = el('button', 'add-place-btn', '+ Add Place');
   addBtn.addEventListener('click', () => openPlaceEditor(day, null));
   listEl.appendChild(addBtn);
+  lucide.createIcons();
 }
 
 function renderPlaceMap(day) {
@@ -739,6 +760,7 @@ async function initApp() {
   renderMap(DAYS);
   initRealtime();
   if (typeof initPlaceRealtime === 'function') initPlaceRealtime();
+  lucide.createIcons();
 
   document.getElementById('openRouteBtn').addEventListener('click', () => {
     if (DAYS.length < 2) return;

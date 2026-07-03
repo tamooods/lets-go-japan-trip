@@ -53,6 +53,13 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
+/* Lucide icon SVGs — flush with surrounding text */
+svg.lucide {
+  display: inline-block;
+  vertical-align: middle;
+  pointer-events: none;
+}
+
 #splash {
   position: fixed;
   inset: 0;
