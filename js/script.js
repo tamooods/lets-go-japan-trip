@@ -1,3 +1,8 @@
+function tileUrlForTheme(theme) {
+  const style = theme === 'dark' ? 'streets-v2-dark' : 'streets-v2';
+  return `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${window.MAPTILER_KEY}&language=en`;
+}
+
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -77,24 +82,8 @@ let detailDayIndex = null,
       localStorage.setItem('theme', 'dark');
     }
     syncIcon();
-    if (map) {
-      const tiles = {
-        light: {
-          url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-          attr: '\u00a9 <a href="https://carto.com/">CARTO</a> \u00a9 <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
-        },
-        dark: {
-          url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-          attr: '\u00a9 <a href="https://carto.com/">CARTO</a> \u00a9 <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
-        },
-      };
-      const key = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-      if (tileLayer) tileLayer.remove();
-      tileLayer = L.tileLayer(tiles[key].url, {
-        maxZoom: 19,
-        subdomains: 'abcd',
-        attribution: tiles[key].attr,
-      }).addTo(map);
+    if (map && tileLayer) {
+      tileLayer.setUrl(tileUrlForTheme(document.documentElement.dataset.theme));
     }
   });
 })();
@@ -332,21 +321,10 @@ function buildPopup(d, i) {
 function renderMap(days) {
   if (!map) {
     map = L.map('map', { zoomControl: false, attributionControl: true }).setView([36, 138.5], 7);
-    const tiles = {
-      light: {
-        url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        attr: '© <a href="https://carto.com/">CARTO</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
-      },
-      dark: {
-        url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        attr: '© <a href="https://carto.com/">CARTO</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
-      },
-    };
-    const key = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-    tileLayer = L.tileLayer(tiles[key].url, {
+    tileLayer = L.tileLayer(tileUrlForTheme(document.documentElement.dataset.theme), {
       maxZoom: 19,
-      subdomains: 'abcd',
-      attribution: tiles[key].attr,
+      attribution:
+        '© <a href="https://www.maptiler.com/copyright/">MapTiler</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
 
     const zoomControl = L.control.zoom({ position: 'topright' });
@@ -512,6 +490,7 @@ setInterval(spawnPetal, 950);
 (function initMobileDrawer() {
   const sidebar = document.querySelector('.sidebar');
   const header = document.querySelector('.header');
+  const handle = document.querySelector('.drag-handle');
   const backdrop = document.createElement('div');
   backdrop.id = 'sidebar-backdrop';
   document.body.appendChild(backdrop);
@@ -533,6 +512,39 @@ setInterval(spawnPetal, 950);
   });
   backdrop.addEventListener('click', closeDrawer);
   window._closeMobileDrawer = closeDrawer;
+
+  let dragging = false,
+    startY = 0,
+    startTranslate = 0;
+  const COLLAPSED_GAP = 94;
+
+  handle.addEventListener('pointerdown', (e) => {
+    if (!isMobile()) return;
+    dragging = true;
+    startY = e.clientY;
+    startTranslate = sidebar.classList.contains('open') ? 0 : sidebar.offsetHeight - COLLAPSED_GAP;
+    sidebar.classList.add('dragging');
+    handle.setPointerCapture(e.pointerId);
+  });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const maxTranslate = sidebar.offsetHeight - COLLAPSED_GAP;
+    const translate = Math.min(maxTranslate, Math.max(0, startTranslate + (e.clientY - startY)));
+    sidebar.style.transform = `translateY(${translate}px)`;
+  });
+
+  function endDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    sidebar.classList.remove('dragging');
+    const maxTranslate = sidebar.offsetHeight - COLLAPSED_GAP;
+    const translate = Math.min(maxTranslate, Math.max(0, startTranslate + (e.clientY - startY)));
+    sidebar.style.transform = '';
+    translate < maxTranslate / 2 ? openDrawer() : closeDrawer();
+  }
+  handle.addEventListener('pointerup', endDrag);
+  handle.addEventListener('pointercancel', endDrag);
 })();
 
 async function enterDetail(i) {

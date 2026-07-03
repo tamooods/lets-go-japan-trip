@@ -62,7 +62,7 @@ async function searchPlaceName(query) {
   const url =
     'https://nominatim.openstreetmap.org/search?q=' +
     encodeURIComponent(q) +
-    '&limit=5&format=json';
+    '&limit=5&format=json&accept-language=th,en,ja';
   try {
     const res = await fetch(url, { headers: { 'User-Agent': 'LetsGoJapanTrip/1.0' } });
     if (!res.ok) return [];
