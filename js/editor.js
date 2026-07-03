@@ -176,7 +176,10 @@ function closePlaceEditor() {
   _pendingLat = null;
   _pendingLng = null;
   _placePickMode = false;
-  document.getElementById('place-editor-modal').classList.add('hidden');
+  const modal = document.getElementById('place-editor-modal');
+  modal.classList.add('hidden');
+  modal.classList.remove('picking');
+  document.getElementById('place-editor-search').placeholder = 'ค้นหาชื่อสถานที่...';
   if (map) map.off('click', placePickHandler);
 }
 
@@ -250,14 +253,27 @@ async function searchPlaceHandler() {
 // Map click handler for picking coordinates
 function enablePlacePickMode() {
   _placePickMode = true;
-  map.once('click', placePickHandler);
+  document.getElementById('place-editor-modal').classList.add('picking');
   document.getElementById('place-editor-search').placeholder = 'คลิกบนแผนที่เพื่อเลือกพิกัด...';
+  map.once('click', placePickHandler);
 }
 
-function placePickHandler(e) {
+async function placePickHandler(e) {
   _pendingLat = e.latlng.lat;
   _pendingLng = e.latlng.lng;
-  document.getElementById('place-editor-search').placeholder = 'ค้นหาชื่อสถานที่...';
+  _placePickMode = false;
+  document.getElementById('place-editor-modal').classList.remove('picking');
+  const searchInput = document.getElementById('place-editor-search');
+  searchInput.placeholder = 'ค้นหาชื่อสถานที่...';
+  searchInput.value = `📍 ${_pendingLat.toFixed(5)}, ${_pendingLng.toFixed(5)}`;
+
+  const nameInput = document.getElementById('place-editor-name');
+  if (nameInput.value.trim()) return;
+
+  nameInput.placeholder = 'กำลังค้นหาชื่อสถานที่...';
+  const name = await reverseGeocodePlace(_pendingLat, _pendingLng);
+  nameInput.placeholder = 'เช่น วัดคินคะคุจิ';
+  if (name && !nameInput.value.trim()) nameInput.value = name;
 }
 
 // Event listeners
@@ -289,4 +305,10 @@ document.getElementById('place-editor-search').addEventListener('keydown', (e) =
 
 document.getElementById('place-editor-pick-btn').addEventListener('click', () => {
   enablePlacePickMode();
+});
+document.getElementById('place-pick-cancel').addEventListener('click', () => {
+  _placePickMode = false;
+  document.getElementById('place-editor-modal').classList.remove('picking');
+  document.getElementById('place-editor-search').placeholder = 'ค้นหาชื่อสถานที่...';
+  if (map) map.off('click', placePickHandler);
 });

@@ -43,6 +43,21 @@ async function deletePlace(id) {
   if (error) throw error;
 }
 
+async function reverseGeocodePlace(lat, lng) {
+  const url =
+    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}` +
+    '&format=json&accept-language=th&zoom=18';
+  try {
+    const res = await fetch(url, { headers: { 'User-Agent': 'LetsGoJapanTrip/1.0' } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || data.error) return null;
+    return data.name || (data.display_name || '').split(',')[0].trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 // Nominatim geocoding — free, no API key, better Japan coverage
 async function searchPlaceName(query) {
   const q = (query || '').trim();
