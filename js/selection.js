@@ -4,7 +4,6 @@ async function ensureMemberSelected() {
 
   if (storedId && storedName) {
     window.currentMember = { id: storedId, name: storedName };
-    // Still load full member list for place split selection
     try {
       const members = await loadMembers();
       window.members = members;

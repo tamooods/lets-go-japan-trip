@@ -16,19 +16,14 @@ export default [
       sourceType: 'script',
       globals: {
         ...globals.browser,
-        // CDN libraries
         supabase: 'readonly',
         L: 'readonly',
-        // db.js
         db: 'readonly',
         loadDays: 'readonly',
         loadMembers: 'readonly',
-        // selection.js
         ensureMemberSelected: 'readonly',
-        // script.js — DOM helpers
         el: 'readonly',
         append: 'readonly',
-        // script.js — functions
         formatTimeAgo: 'readonly',
         haversineKm: 'readonly',
         renderSidebar: 'readonly',
@@ -43,13 +38,11 @@ export default [
         renderPlaceMap: 'readonly',
         focusPlace: 'readonly',
         deletePlaceHandler: 'readonly',
-        // realtime.js
         initRealtime: 'readonly',
         initPlaceRealtime: 'readonly',
         handleDayChange: 'readonly',
         handlePlaceChange: 'readonly',
         showServerUpdatedIndicator: 'readonly',
-        // editor.js
         openEditor: 'readonly',
         closeEditor: 'readonly',
         saveEditor: 'readonly',
@@ -60,19 +53,15 @@ export default [
         enablePlacePickMode: 'readonly',
         placePickHandler: 'readonly',
         renderSplitCheckboxes: 'readonly',
-        // conflict.js
         openConflictModal: 'readonly',
         closeConflictModal: 'readonly',
-        // auth.js
         initAuth: 'readonly',
-        // day-places.js
         loadDayPlaces: 'readonly',
         addPlace: 'readonly',
         updatePlace: 'readonly',
         deletePlace: 'readonly',
         searchPlaceName: 'readonly',
         reverseGeocodePlace: 'readonly',
-        // script.js — state globals
         DAYS: 'writable',
         map: 'writable',
         markers: 'writable',
@@ -81,7 +70,6 @@ export default [
         placeMarkers: 'writable',
         isDetailMode: 'writable',
         detailDayIndex: 'writable',
-        // config.js / config.example.js
         SUPABASE_URL: 'readonly',
         SUPABASE_ANON_KEY: 'readonly',
         TRIP_ITINERARY_ID: 'readonly',

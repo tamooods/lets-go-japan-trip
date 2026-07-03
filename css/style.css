@@ -53,9 +53,6 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
-/* ═══════════════════════════════
-   SPLASH SCREEN
-═══════════════════════════════ */
 #splash {
   position: fixed;
   inset: 0;
@@ -186,7 +183,6 @@ a:focus-visible {
   margin-top: 8px;
 }
 
-/* atmosphere glow */
 body::before {
   content: '';
   position: fixed;
@@ -198,9 +194,6 @@ body::before {
   z-index: 200;
 }
 
-/* ═══════════════════════════════
-   SIDEBAR
-═══════════════════════════════ */
 .sidebar {
   width: 310px;
   flex-shrink: 0;
@@ -212,7 +205,6 @@ body::before {
   z-index: 10;
 }
 
-/* Header */
 .header {
   padding: 26px 22px 20px;
   border-bottom: 2px dashed var(--line);
@@ -362,7 +354,6 @@ body::before {
   aspect-ratio: 1;
 }
 
-/* Music Toggle Button */
 .music-btn {
   display: inline-flex;
   align-items: center;
@@ -395,7 +386,6 @@ body::before {
   transition: all 0.3s ease;
 }
 
-/* Playing state - filled button with equalizer */
 .music-btn.playing {
   background: var(--red);
   border-color: var(--red);
@@ -443,7 +433,6 @@ body::before {
   }
 }
 
-/* Dark mode */
 [data-theme='dark'] .music-btn {
   border-color: rgba(232, 223, 200, 0.1);
 }
@@ -481,7 +470,6 @@ body::before {
   transition: all 0.2s ease;
 }
 
-/* Playing state - pulse animation */
 .music-btn.playing {
   background: rgba(200, 92, 58, 0.1);
   border-color: var(--red);
@@ -503,7 +491,6 @@ body::before {
   }
 }
 
-/* Dark mode */
 [data-theme='dark'] .music-btn {
   border-color: rgba(200, 92, 58, 0.5);
 }
@@ -527,7 +514,6 @@ body::before {
   height: 15px;
 }
 
-/* Day list */
 .day-list {
   flex: 1;
   overflow-y: auto;
@@ -627,7 +613,6 @@ body::before {
   background: rgba(200, 92, 58, 0.12);
 }
 
-/* Teardrop pin icon in sidebar */
 .s-pin {
   width: 32px;
   height: 32px;
@@ -663,7 +648,6 @@ body::before {
   color: #fff;
 }
 
-/* Day info text */
 .day-info {
   flex: 1;
   min-width: 0;
@@ -844,7 +828,6 @@ body::before {
   color: #8aa8c8;
 }
 
-/* Footer */
 .footer {
   padding: 13px 22px;
   border-top: 1px solid var(--line);
@@ -890,21 +873,16 @@ body::before {
   );
 }
 
-/* ═══════════════════════════════
-   MAP
-═══════════════════════════════ */
 #map {
   flex: 1;
   height: 100vh;
   z-index: 1;
 }
 
-/* Warm filter for map tiles - vintage sepia tone */
 .leaflet-tile {
   filter: sepia(8%) hue-rotate(5deg) brightness(98%) contrast(96%);
 }
 
-/* ─── Leaflet popup overrides ─── */
 .leaflet-popup-content-wrapper {
   background: var(--paper) !important;
   border: 1px solid var(--line) !important;
@@ -937,7 +915,6 @@ body::before {
   display: none;
 }
 
-/* Popup content */
 .pop {
   padding: 16px 20px 18px;
   min-width: 220px;
@@ -983,7 +960,6 @@ body::before {
   color: #e8dfc8 !important;
 }
 
-/* Popup content */
 .pop {
   padding: 18px 22px 16px;
   min-width: 210px;
@@ -999,7 +975,6 @@ body::before {
   position: relative;
 }
 
-/* Skeleton Loading */
 .pop-img-loading {
   background: linear-gradient(135deg, #f0ede3 0%, #e8e3d6 50%, #f0ede3 100%);
   background-size: 200% 200%;
@@ -1026,7 +1001,6 @@ body::before {
     center/40px no-repeat;
 }
 
-/* Fallback Error */
 .pop-img-error {
   background: linear-gradient(135deg, #f5f0e6 0%, #ebe6da 100%);
 }
@@ -1214,7 +1188,6 @@ body::before {
   background: #e8a890;
 }
 
-/* ─── Map markers ─── */
 .mk-offset {
   transition: transform 0.2s ease;
 }
@@ -1263,7 +1236,6 @@ body::before {
   }
 }
 
-/* Popup entrance */
 @keyframes popIn {
   from {
     opacity: 0;
@@ -1294,7 +1266,6 @@ body::before {
   color: #fff;
 }
 
-/* ─── Zoom Controls ─── */
 .leaflet-control-zoom {
   border: none !important;
   box-shadow: 0 2px 12px rgba(42, 32, 24, 0.12) !important;
@@ -1329,7 +1300,6 @@ body::before {
   border-radius: 6px 6px 10px 10px !important;
 }
 
-/* Dark mode zoom controls */
 [data-theme='dark'] .leaflet-control-zoom a {
   background: rgba(42, 32, 24, 0.9) !important;
   color: #e8dfc8 !important;
@@ -1339,7 +1309,6 @@ body::before {
   background: rgba(42, 32, 24, 1) !important;
 }
 
-/* Attribution */
 .leaflet-control-attribution {
   background: rgba(255, 255, 255, 0.7) !important;
   backdrop-filter: blur(4px);
@@ -1349,9 +1318,6 @@ body::before {
   margin: 4px !important;
 }
 
-/* ═══════════════════════════════
-   PETALS / SNOWFLAKES
-═══════════════════════════════ */
 #petals {
   position: fixed;
   inset: 0;
@@ -1391,9 +1357,6 @@ body::before {
   }
 }
 
-/* ═══════════════════════════════
-   MOBILE  (≤ 640px)
-═══════════════════════════════ */
 @media (max-width: 640px) {
   #map {
     position: fixed;
@@ -1402,7 +1365,6 @@ body::before {
     z-index: 1;
   }
 
-  /* backdrop sits between map(z:1) and sidebar(z:50) to catch outside taps */
   #sidebar-backdrop {
     display: none;
     position: fixed;
@@ -1435,7 +1397,6 @@ body::before {
     transform: translateY(0);
   }
 
-  /* pull handle bar */
   .sidebar::before {
     content: '';
     display: block;
@@ -1566,7 +1527,6 @@ body::before {
     display: none;
   }
 
-  /* Modal Mobile */
   .modal-box {
     padding: 1.25rem;
     border-radius: 16px;
@@ -1602,7 +1562,6 @@ body::before {
     flex: none;
   }
 
-  /* Place editor: bottom sheet on mobile */
   #place-editor-modal {
     align-items: flex-end;
     padding: 0;
@@ -1638,7 +1597,6 @@ body::before {
     }
   }
 
-  /* Map mobile */
   .leaflet-control-zoom a {
     width: 42px !important;
     height: 42px !important;
@@ -1655,7 +1613,6 @@ body::before {
     font-size: 17px;
   }
 
-  /* Popup mobile */
   .pop {
     padding: 14px 16px;
     min-width: 200px;
@@ -1682,7 +1639,6 @@ body::before {
   }
 }
 
-/* Auth Overlay */
 .auth-overlay {
   position: fixed;
   inset: 0;
@@ -1738,7 +1694,6 @@ body::before {
   color: #666;
 }
 
-/* Editor + Conflict Modals */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -2071,7 +2026,6 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
   margin: 0;
 }
 
-/* Member selection modal */
 .selection-buttons {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -2141,7 +2095,6 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
   }
 }
 
-/* Editor attribution stamp in sidebar */
 .day-editor {
   display: inline-flex;
   align-items: center;
@@ -2178,7 +2131,6 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
   opacity: 0.4;
 }
 
-/* Countdown Widget */
 .stats-widget {
   position: fixed;
   bottom: 25px;
@@ -2287,7 +2239,6 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
   color: #aaa;
 }
 
-/* Mobile responsive */
 @media (max-width: 640px) {
   .stats-widget {
     top: 10px;
@@ -2316,9 +2267,6 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
   }
 }
 
-/* ═══════════════════════════════
-   DAY DETAIL — PLACE LIST
-═══════════════════════════════ */
 .day-place-list {
   flex: 1;
   overflow-y: auto;
@@ -2532,9 +2480,6 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
   color: var(--red);
 }
 
-/* ═══════════════════════════════
-   PLACE EDITOR MODAL
-═══════════════════════════════ */
 .place-editor-box {
   display: flex;
   flex-direction: column;

@@ -1,4 +1,3 @@
-// auth.js
 async function initAuth() {
   const {
     data: { session },

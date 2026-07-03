@@ -1,4 +1,3 @@
-// realtime.js
 function initRealtime() {
   db.channel('days-changes')
     .on(
@@ -47,7 +46,6 @@ function handleDayChange(payload) {
   }
 }
 
-// ─── Day Places Realtime ──────────────────────────
 function initPlaceRealtime() {
   db.channel('day-places-changes')
     .on(
@@ -66,13 +64,11 @@ function initPlaceRealtime() {
 
 function handlePlaceChange(payload) {
   if (!isDetailMode || detailDayIndex === null) return;
-  // Only refresh if the change is for the currently viewed day
   const place = payload.new;
   const old = payload.old;
   const dayId = place ? place.day_id : old ? old.day_id : null;
   if (dayId !== DAYS[detailDayIndex]?.id) return;
 
-  // Debounce: reload places and re-render
   loadDayPlaces(dayId).then((fresh) => {
     places = fresh;
     renderDayDetail(DAYS[detailDayIndex]);

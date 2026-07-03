@@ -1,4 +1,3 @@
-// script.js
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -20,8 +19,6 @@ function append(parent, ...children) {
   return parent;
 }
 
-// ponytail: older entries packed the date into "place _ date"; fall back to
-// splitting that until every row has been re-saved through the editor.
 function splitPlaceDate(det) {
   if (det.date) return { place: det.place, date: formatDateLabel(det.date) };
   if (det.place && det.place.includes('_')) {
@@ -31,8 +28,6 @@ function splitPlaceDate(det) {
   return { place: det.place, date: '' };
 }
 
-// details.date is stored as an ISO "YYYY-MM-DD" from <input type="date">;
-// display it the same short way the old free-text convention did ("6 Dec").
 function formatDateLabel(dateStr) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
   if (!m) return dateStr;
@@ -95,18 +90,15 @@ let detailDayIndex = null,
   });
 })();
 
-// Music Toggle
 (function initMusic() {
   const audio = document.getElementById('lofi-audio');
   const btn = document.getElementById('musicToggle');
 
   audio.volume = 0.15;
 
-  // Muted/Off icon - music note with slash
   const musicOffIcon =
     '<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>';
 
-  // Playing/On icon - equalizer bars
   const musicOnIcon =
     '<div class="music-icon" style="display:flex;gap:2px;align-items:flex-end;justify-content:center;"><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span></div>';
 
@@ -132,7 +124,6 @@ let detailDayIndex = null,
     }
   });
 
-  // Restore music state
   if (localStorage.getItem('musicPlaying') === 'true') {
     audio
       .play()
@@ -163,14 +154,12 @@ function initStatsWidget() {
   const minutesEl = document.getElementById('stats-minutes');
   const secondsEl = document.getElementById('stats-seconds');
 
-  // Guard: check all elements exist
   if (!widget || !pillValue || !daysEl || !hoursEl || !minutesEl || !secondsEl) return;
 
   function updateCountdown() {
     const now = Date.now();
     const departure = new Date(window.TRIP_DEPARTURE_DATE).getTime();
 
-    // Guard: invalid date format
     if (isNaN(departure)) {
       widget.classList.add('hidden');
       return;
@@ -183,7 +172,6 @@ function initStatsWidget() {
       return;
     }
 
-    // Date is valid and in the future — show widget
     widget.classList.remove('hidden');
 
     const totalSeconds = Math.floor(diff / 1000);
@@ -201,12 +189,9 @@ function initStatsWidget() {
     secondsEl.textContent = String(seconds).padStart(2, '0');
   }
 
-  // Initial update
   updateCountdown();
 
-  // Only show widget if date is valid (updateCountdown() hid it if invalid)
   if (!widget.classList.contains('hidden')) {
-    // Update every 1 second
     setInterval(updateCountdown, 1000);
   }
 }
@@ -323,7 +308,6 @@ function buildPopup(d, i) {
   (det.acts || []).forEach((a) => acts.appendChild(el('li', null, a)));
   pop.appendChild(acts);
 
-  // Detail button
   const detailBtn = el('button', 'pop-detail-btn', '📋 รายละเอียด');
   detailBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -354,7 +338,6 @@ function renderMap(days) {
       attribution: tiles[key].attr,
     }).addTo(map);
 
-    // Custom zoom controls with glassmorphism
     const zoomControl = L.control.zoom({ position: 'topright' });
     map.addControl(zoomControl);
   }
@@ -386,10 +369,6 @@ function renderMap(days) {
   });
 
   days.forEach((d, i) => {
-    // ponytail: nearby pins get visually nudged apart (see declutterMarkerIcons
-    // below) without moving the marker's real LatLng, so an inner wrapper div
-    // carries that offset separately from the .mk pin's own rotate/hover/reveal
-    // transforms.
     const offsetDiv = document.createElement('div');
     offsetDiv.className = 'mk-offset';
     offsetDiv.id = 'mkoff' + i;
@@ -417,13 +396,6 @@ function renderMap(days) {
     markers.push(m);
   });
 
-  // ponytail: pins that end up close together on screen (e.g. nearby Tokyo
-  // days) get nudged apart in pixel space so their numbers don't overlap.
-  // This only offsets the rendered icon (via .mk-offset), never the marker's
-  // real LatLng, so popups, the route line, and flyTo() targeting always
-  // stay anchored to the true coordinates. Recomputed on every zoom/pan so
-  // the offset shrinks to nothing once pins are naturally far apart —
-  // upgrade to a spiderfy plugin if trips start clustering 5+ pins tightly.
   function declutterMarkerIcons() {
     const pts = coords.map((c) => map.latLngToContainerPoint(c));
     const targets = pts.map((p) => ({ x: p.x, y: p.y }));
@@ -550,24 +522,19 @@ setInterval(spawnPetal, 950);
   window._closeMobileDrawer = closeDrawer;
 })();
 
-// ─── Day Detail Functions ──────────────────────────
-
 async function enterDetail(i) {
   const day = DAYS[i];
   if (!day) return;
   isDetailMode = true;
   detailDayIndex = i;
 
-  // Hide day markers, show place markers
   markers.forEach((m) => {
     if (map.hasLayer(m)) map.removeLayer(m);
   });
   (window._legLines || []).forEach((l) => map.removeLayer(l));
 
-  // Load places
   places = await loadDayPlaces(day.id);
 
-  // Transform sidebar
   const headerActions = document.querySelector('.btn-group');
   detailBackBtn = el('button', 'detail-back-btn', '◀ กลับ Overview');
   detailBackBtn.addEventListener('click', exitDetail);
@@ -579,10 +546,8 @@ async function enterDetail(i) {
   listEl.classList.add('day-place-list');
   renderDayDetail(day);
 
-  // Scope map
   renderPlaceMap(day);
 
-  // Mobile auto-expand
   if (window.innerWidth <= 640) {
     document.querySelector('.sidebar').classList.add('open');
     document.getElementById('sidebar-backdrop')?.classList.add('active');
@@ -594,17 +559,13 @@ function exitDetail() {
   detailDayIndex = null;
   places = [];
 
-  // Clean up place markers
   placeMarkers.forEach((m) => map.removeLayer(m));
   placeMarkers = [];
 
-  // Restore day markers
   markers.forEach((m) => m.addTo(map));
 
-  // Restore polyline legs
   (window._legLines || []).forEach((l) => l.addTo(map));
 
-  // Restore sidebar
   const listEl = document.getElementById('dayList');
   listEl.classList.remove('day-place-list');
   listEl.classList.add('day-list');
@@ -616,7 +577,6 @@ function exitDetail() {
 
   renderSidebar(DAYS);
 
-  // Restore map bounds
   const coords = DAYS.map((d) => [d.details.lat, d.details.lng]);
   if (coords.length) {
     map.fitBounds(L.latLngBounds(coords), { padding: [40, 60] });
@@ -667,7 +627,6 @@ function renderDayDetail(day) {
 
       body.appendChild(meta);
 
-      // Card actions
       const actions = el('div', 'place-card-actions');
       const editBtn = el('button', 'place-edit-btn', '✏️ แก้ไข');
       editBtn.addEventListener('click', (e) => {
@@ -699,7 +658,6 @@ function renderDayDetail(day) {
     });
   }
 
-  // Add place button
   const addBtn = el('button', 'add-place-btn', '+ Add Place');
   addBtn.addEventListener('click', () => openPlaceEditor(day, null));
   listEl.appendChild(addBtn);
@@ -711,14 +669,12 @@ function renderPlaceMap(day) {
 
   const validPlaces = places.filter((p) => p.lat && p.lng);
   if (!validPlaces.length) {
-    // If no places with coords, just show day's main location
     map.flyTo([day.details.lat, day.details.lng], 12, { duration: 0.8 });
     return;
   }
 
   const coords = validPlaces.map((p) => [p.lat, p.lng]);
 
-  // Polyline between places — direct connections by sort_index
   for (let i = 1; i < validPlaces.length; i++) {
     L.polyline([coords[i - 1], coords[i]], {
       color: '#5b7fa0',
@@ -730,7 +686,6 @@ function renderPlaceMap(day) {
     }).addTo(map);
   }
 
-  // Markers
   validPlaces.forEach((p, idx) => {
     const mkDiv = document.createElement('div');
     mkDiv.className = 'mk';
@@ -764,7 +719,6 @@ function focusPlace(idx) {
   map.once('moveend', () => {
     if (placeMarkers[idx]) placeMarkers[idx].openPopup();
   });
-  // Highlight card
   document.querySelectorAll('.place-card').forEach((c) => c.classList.remove('active'));
   const cards = document.querySelectorAll('.place-card');
   if (cards[idx]) cards[idx].classList.add('active');
@@ -773,7 +727,6 @@ function focusPlace(idx) {
 async function deletePlaceHandler(p) {
   if (!confirm('ลบ ' + p.name + '? แน่ใจ?')) return;
   await deletePlace(p.id);
-  // Refresh detail
   places = await loadDayPlaces(DAYS[detailDayIndex].id);
   renderDayDetail(DAYS[detailDayIndex]);
   renderPlaceMap(DAYS[detailDayIndex]);
@@ -811,7 +764,6 @@ async function initApp() {
     console.error('Failed to initialize app:', err);
   }
 
-  // Widget is non-critical; initialize separately so failures don't block app
   try {
     initStatsWidget();
   } catch (err) {

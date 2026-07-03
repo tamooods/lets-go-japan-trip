@@ -1,4 +1,3 @@
-// conflict.js
 let _conflictContext = null;
 
 function fmtDetails(det) {

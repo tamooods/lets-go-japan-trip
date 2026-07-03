@@ -1,4 +1,3 @@
-// editor.js
 let _editingDay = null;
 
 function openEditor(day) {
@@ -6,10 +5,6 @@ function openEditor(day) {
   window._editingDayId = day.id;
   const det = day.details;
 
-  // ponytail: older entries packed a free-text date into "place _ date" (or
-  // none at all); <input type="date"> only accepts real ISO dates, so those
-  // legacy labels can't be pre-filled — leave the picker blank for a one-time
-  // re-pick instead of guessing a year.
   let place = det.place || '';
   if (!det.date && place.includes('_')) {
     place = place.split('_')[0].trim();
@@ -115,7 +110,6 @@ document.getElementById('editor-save').addEventListener('click', saveEditor);
 document.getElementById('editor-cancel').addEventListener('click', closeEditor);
 document.getElementById('editor-close').addEventListener('click', closeEditor);
 
-// ─── Place Editor ─────────────────────────────────
 let _editingPlace = null;
 let _editingPlaceDay = null;
 let _pendingLat = null;
@@ -144,7 +138,6 @@ function openPlaceEditor(day, place) {
   document.getElementById('place-editor-results').classList.add('hidden');
   document.getElementById('place-editor-results').textContent = '';
 
-  // Render split checkboxes
   renderSplitCheckboxes(place);
 
   document.getElementById('place-editor-modal').classList.remove('hidden');
@@ -215,9 +208,8 @@ async function savePlaceEditor() {
     } else {
       await addPlace(_editingPlaceDay.id, data);
     }
-    const day = _editingPlaceDay; // save before closePlaceEditor nulls it
+    const day = _editingPlaceDay;
     closePlaceEditor();
-    // Refresh detail view
     places = await loadDayPlaces(day.id);
     renderDayDetail(day);
     renderPlaceMap(day);
@@ -226,7 +218,6 @@ async function savePlaceEditor() {
   }
 }
 
-// ─── Geocoding ────────────────────────────────────
 async function searchPlaceHandler() {
   const q = document.getElementById('place-editor-search').value.trim();
   if (!q) return;
@@ -250,7 +241,6 @@ async function searchPlaceHandler() {
   container.classList.remove('hidden');
 }
 
-// Map click handler for picking coordinates
 function enablePlacePickMode() {
   _placePickMode = true;
   document.getElementById('place-editor-modal').classList.add('picking');
@@ -276,7 +266,6 @@ async function placePickHandler(e) {
   if (name && !nameInput.value.trim()) nameInput.value = name;
 }
 
-// Event listeners
 document.getElementById('place-editor-name').addEventListener('input', (e) => {
   e.target.classList.remove('invalid');
   document.getElementById('place-editor-name-error').classList.add('hidden');

@@ -1,5 +1,3 @@
-// day-places.js — CRUD for day_places + geocoding
-
 async function loadDayPlaces(dayId) {
   if (!dayId) return [];
   const { data, error } = await db.rpc('get_day_places', { p_day_id: dayId });
@@ -58,7 +56,6 @@ async function reverseGeocodePlace(lat, lng) {
   }
 }
 
-// Nominatim geocoding — free, no API key, better Japan coverage
 async function searchPlaceName(query) {
   const q = (query || '').trim();
   if (q.length < 2) return [];
