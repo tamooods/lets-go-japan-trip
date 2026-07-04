@@ -561,9 +561,12 @@ async function enterDetail(i) {
   places = await loadDayPlaces(day.id);
 
   const headerActions = document.querySelector('.btn-group');
-  detailBackBtn = el('button', 'detail-back-btn', '◀ กลับ Overview');
+  headerActions.classList.add('hidden');
+  detailBackBtn = el('button', 'detail-back-btn');
+  append(detailBackBtn, icon('arrow-left', 15), el('span', null, 'กลับ'));
   detailBackBtn.addEventListener('click', exitDetail);
   headerActions.parentNode.insertBefore(detailBackBtn, headerActions);
+  lucide.createIcons();
 
   const listEl = document.getElementById('dayList');
   listEl.textContent = '';
@@ -599,6 +602,7 @@ function exitDetail() {
     detailBackBtn.remove();
     detailBackBtn = null;
   }
+  document.querySelector('.btn-group').classList.remove('hidden');
 
   renderSidebar(DAYS);
 
