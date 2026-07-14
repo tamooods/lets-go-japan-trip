@@ -52,6 +52,7 @@ function formatDateLabel(dateStr) {
 let DAYS = [];
 let places = [],
   placeMarkers = [],
+  placePolylines = [],
   isDetailMode = false;
 let map,
   markers = [],
@@ -255,7 +256,7 @@ function renderSidebar(days) {
     }
     listEl.appendChild(item);
   });
-  lucide.createIcons();
+  lucide?.createIcons();
 }
 
 function buildPopup(d, i) {
@@ -315,6 +316,46 @@ function buildPopup(d, i) {
     enterDetail(i);
   });
   pop.appendChild(detailBtn);
+  return pop;
+}
+
+function buildPlacePopup(p) {
+  const pop = el('div', 'pop');
+  const titleEl = el('div', 'pop-title');
+  titleEl.appendChild(el('span', null, p.name));
+  pop.appendChild(titleEl);
+
+  if (p.acts && p.acts.length) {
+    const actsArr = Array.isArray(p.acts)
+      ? p.acts
+      : typeof p.acts === 'string'
+        ? JSON.parse(p.acts)
+        : [];
+    const acts = el('ul', 'pop-acts');
+    actsArr.slice(0, 4).forEach((a) => acts.appendChild(el('li', null, a)));
+    if (actsArr.length > 4) {
+      acts.appendChild(el('li', null, '... +' + (actsArr.length - 4)));
+    }
+    pop.appendChild(acts);
+  }
+
+  if (p.expense > 0 || (p.split_among && p.split_among.length)) {
+    const meta = el('div', 'pop-travel');
+    if (p.expense > 0) meta.textContent = '¥' + Number(p.expense).toLocaleString();
+    if (p.split_among && p.split_among.length && window.members) {
+      const names = p.split_among
+        .map((uid) => window.members.find((m) => m.id === uid))
+        .filter(Boolean)
+        .map((m) => m.name)
+        .join(', ');
+      if (names) {
+        if (meta.textContent) meta.textContent += ' · ';
+        meta.textContent += names;
+      }
+    }
+    pop.appendChild(meta);
+  }
+
   return pop;
 }
 
@@ -566,7 +607,7 @@ async function enterDetail(i) {
   append(detailBackBtn, icon('arrow-left', 15), el('span', null, 'กลับ'));
   detailBackBtn.addEventListener('click', exitDetail);
   headerActions.parentNode.insertBefore(detailBackBtn, headerActions);
-  lucide.createIcons();
+  lucide?.createIcons();
 
   const listEl = document.getElementById('dayList');
   listEl.textContent = '';
@@ -589,6 +630,9 @@ function exitDetail() {
 
   placeMarkers.forEach((m) => map.removeLayer(m));
   placeMarkers = [];
+
+  placePolylines.forEach((l) => map.removeLayer(l));
+  placePolylines = [];
 
   markers.forEach((m) => m.addTo(map));
 
@@ -697,12 +741,14 @@ function renderDayDetail(day) {
   const addBtn = el('button', 'add-place-btn', '+ Add Place');
   addBtn.addEventListener('click', () => openPlaceEditor(day, null));
   listEl.appendChild(addBtn);
-  lucide.createIcons();
+  lucide?.createIcons();
 }
 
 function renderPlaceMap(day) {
   placeMarkers.forEach((m) => map.removeLayer(m));
   placeMarkers = [];
+  placePolylines.forEach((l) => map.removeLayer(l));
+  placePolylines = [];
 
   const validPlaces = places.filter((p) => p.lat && p.lng);
   if (!validPlaces.length) {
@@ -713,7 +759,7 @@ function renderPlaceMap(day) {
   const coords = validPlaces.map((p) => [p.lat, p.lng]);
 
   for (let i = 1; i < validPlaces.length; i++) {
-    L.polyline([coords[i - 1], coords[i]], {
+    const pl = L.polyline([coords[i - 1], coords[i]], {
       color: '#5b7fa0',
       weight: 2,
       opacity: 0.5,
@@ -721,6 +767,7 @@ function renderPlaceMap(day) {
       lineJoin: 'round',
       dashArray: '4 6',
     }).addTo(map);
+    placePolylines.push(pl);
   }
 
   validPlaces.forEach((p, idx) => {
@@ -741,7 +788,7 @@ function renderPlaceMap(day) {
     });
 
     const m = L.marker([p.lat, p.lng], { icon }).addTo(map);
-    m.bindPopup(p.name, { maxWidth: 200 });
+    m.bindPopup(buildPlacePopup(p), { maxWidth: 280 });
     m.on('click', () => focusPlace(idx));
     placeMarkers.push(m);
   });
@@ -776,7 +823,7 @@ async function initApp() {
   renderMap(DAYS);
   initRealtime();
   if (typeof initPlaceRealtime === 'function') initPlaceRealtime();
-  lucide.createIcons();
+  lucide?.createIcons();
 
   document.getElementById('openRouteBtn').addEventListener('click', () => {
     if (DAYS.length < 2) return;

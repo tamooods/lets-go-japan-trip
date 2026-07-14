@@ -2454,27 +2454,35 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
   font-weight: 700;
   pointer-events: none;
 }
-.coord-card {
+.place-search-card {
   border: 1.5px dashed var(--line);
   border-radius: 8px;
   padding: 0.6rem;
-  margin-bottom: 1rem;
   background: rgba(120, 100, 60, 0.03);
 }
-.coord-row {
+.place-search-card.invalid {
+  border-style: solid;
+  border-color: var(--red);
+  background: rgba(200, 92, 58, 0.05);
+  animation: fieldShake 0.35s ease;
+}
+.place-search-card .field-error {
+  margin: 0.5rem 0 0;
+}
+.place-search-row {
   display: flex;
   align-items: stretch;
   gap: 0.4rem;
 }
-.coord-row .modal-input {
+.place-search-row .modal-input {
   flex: 1;
   margin-bottom: 0;
 }
-.coord-card .search-results {
+.place-search-card .search-results {
   margin-top: 0.5rem;
   margin-bottom: 0;
 }
-.coord-row .btn-sm {
+.place-search-row .btn-sm {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2485,6 +2493,17 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
   border-radius: 50%;
   flex-shrink: 0;
   min-height: 0;
+}
+.coord-badge {
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--gray);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.coord-badge.hidden {
+  display: none;
 }
 .modal-input-sm {
   width: 50%;

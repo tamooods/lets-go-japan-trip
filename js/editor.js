@@ -116,6 +116,17 @@ let _pendingLat = null;
 let _pendingLng = null;
 let _placePickMode = false;
 
+function updateCoordBadge() {
+  const badge = document.getElementById('place-editor-coord-badge');
+  const text = document.getElementById('place-editor-coord-text');
+  if (_pendingLat != null && _pendingLng != null) {
+    text.textContent = `${_pendingLat.toFixed(5)}, ${_pendingLng.toFixed(5)}`;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
 function openPlaceEditor(day, place) {
   _editingPlaceDay = day;
   _editingPlace = place;
@@ -124,19 +135,18 @@ function openPlaceEditor(day, place) {
   document.getElementById('place-editor-title').textContent = isNew
     ? 'เพิ่มสถานที่'
     : 'แก้ไขสถานที่';
-  const nameInput = document.getElementById('place-editor-name');
-  nameInput.value = place ? place.name || '' : '';
-  nameInput.classList.remove('invalid');
-  document.getElementById('place-editor-name-error').classList.add('hidden');
   const actsArr =
     place && place.acts ? (Array.isArray(place.acts) ? place.acts : JSON.parse(place.acts)) : [];
   document.getElementById('place-editor-acts').value = actsArr.join('\n');
   document.getElementById('place-editor-expense').value = place ? place.expense || 0 : 0;
   _pendingLat = place ? place.lat || null : null;
   _pendingLng = place ? place.lng || null : null;
-  document.getElementById('place-editor-search').value = '';
+  document.getElementById('place-editor-search').value = place ? place.name || '' : '';
+  document.getElementById('place-editor-coord-card').classList.remove('invalid');
+  document.getElementById('place-editor-coord-error').classList.add('hidden');
   document.getElementById('place-editor-results').classList.add('hidden');
   document.getElementById('place-editor-results').textContent = '';
+  updateCoordBadge();
 
   renderSplitCheckboxes(place);
 
@@ -172,7 +182,7 @@ function renderSplitCheckboxes(place) {
     cb.checked = selected.includes(m.id);
     cb.addEventListener('change', () => {
       allCb.checked = [...container.querySelectorAll('input[type="checkbox"][value]')].every(
-        (c) => c.checked
+        (c) => c.checked,
       );
     });
     label.appendChild(cb);
@@ -191,16 +201,15 @@ function closePlaceEditor() {
   modal.classList.add('hidden');
   modal.classList.remove('picking');
   document.getElementById('place-editor-search').placeholder = 'ค้นหาชื่อสถานที่...';
+  document.getElementById('place-editor-coord-badge').classList.add('hidden');
   if (map) map.off('click', placePickHandler);
 }
 
 async function savePlaceEditor() {
-  const nameInput = document.getElementById('place-editor-name');
-  const name = nameInput.value.trim();
+  const searchInput = document.getElementById('place-editor-search');
+  const name = searchInput.value.trim();
   if (!name) {
-    nameInput.classList.add('invalid');
-    document.getElementById('place-editor-name-error').classList.remove('hidden');
-    nameInput.focus();
+    searchInput.focus();
     return;
   }
 
@@ -209,14 +218,28 @@ async function savePlaceEditor() {
     .value.split('\n')
     .map((s) => s.trim())
     .filter(Boolean);
+  if (!acts.length) {
+    document.getElementById('place-editor-acts-error').classList.remove('hidden');
+    document.getElementById('place-editor-acts').focus();
+    return;
+  }
+
   const expense = parseFloat(document.getElementById('place-editor-expense').value) || 0;
   const lat = _pendingLat;
   const lng = _pendingLng;
 
+  if (lat == null || lng == null) {
+    document.getElementById('place-editor-coord-card').classList.add('invalid');
+    document.getElementById('place-editor-coord-error').classList.remove('hidden');
+    return;
+  }
+
   const splitCheckboxes = document.querySelectorAll(
     '#place-editor-split input[type="checkbox"]:checked',
   );
-  const split_among = Array.from(splitCheckboxes).map((cb) => cb.value);
+  const split_among = Array.from(splitCheckboxes)
+    .map((cb) => cb.value)
+    .filter((v) => v && v !== 'on');
 
   const data = { name, acts, expense, split_among, lat, lng };
 
@@ -250,8 +273,11 @@ async function searchPlaceHandler() {
       item.addEventListener('click', () => {
         _pendingLat = r.lat;
         _pendingLng = r.lng;
-        document.getElementById('place-editor-name').value = r.name;
+        document.getElementById('place-editor-search').value = r.name;
+        document.getElementById('place-editor-coord-card').classList.remove('invalid');
+        document.getElementById('place-editor-coord-error').classList.add('hidden');
         container.classList.add('hidden');
+        updateCoordBadge();
       });
       container.appendChild(item);
     });
@@ -269,29 +295,28 @@ function enablePlacePickMode() {
 async function placePickHandler(e) {
   _pendingLat = e.latlng.lat;
   _pendingLng = e.latlng.lng;
+  document.getElementById('place-editor-coord-card').classList.remove('invalid');
+  document.getElementById('place-editor-coord-error').classList.add('hidden');
   _placePickMode = false;
   document.getElementById('place-editor-modal').classList.remove('picking');
   const searchInput = document.getElementById('place-editor-search');
   searchInput.placeholder = 'ค้นหาชื่อสถานที่...';
-  searchInput.value = `📍 ${_pendingLat.toFixed(5)}, ${_pendingLng.toFixed(5)}`;
 
-  const nameInput = document.getElementById('place-editor-name');
-  if (nameInput.value.trim()) return;
-
-  nameInput.placeholder = 'กำลังค้นหาชื่อสถานที่...';
-  const name = await reverseGeocodePlace(_pendingLat, _pendingLng);
-  nameInput.placeholder = 'เช่น วัดคินคะคุจิ';
-  if (name && !nameInput.value.trim()) nameInput.value = name;
+  if (!searchInput.value.trim()) {
+    searchInput.placeholder = 'กำลังค้นหาชื่อสถานที่...';
+    const name = await reverseGeocodePlace(_pendingLat, _pendingLng);
+    searchInput.placeholder = 'ค้นหาชื่อสถานที่...';
+    if (name) searchInput.value = name;
+  }
+  updateCoordBadge();
 }
 
-document.getElementById('place-editor-name').addEventListener('input', (e) => {
-  e.target.classList.remove('invalid');
-  document.getElementById('place-editor-name-error').classList.add('hidden');
+document.getElementById('place-editor-acts').addEventListener('input', () => {
+  document.getElementById('place-editor-acts-error').classList.add('hidden');
 });
 document.getElementById('place-editor-save').addEventListener('click', savePlaceEditor);
 document.getElementById('place-editor-cancel').addEventListener('click', closePlaceEditor);
 document.getElementById('place-editor-close').addEventListener('click', closePlaceEditor);
-document.getElementById('place-editor-search-btn').addEventListener('click', searchPlaceHandler);
 let _searchTimer;
 document.getElementById('place-editor-search').addEventListener('input', () => {
   clearTimeout(_searchTimer);
