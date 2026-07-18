@@ -18,6 +18,7 @@ export default [
         ...globals.browser,
         supabase: 'readonly',
         L: 'readonly',
+        lucide: 'readonly',
         db: 'readonly',
         loadDays: 'readonly',
         loadMembers: 'readonly',

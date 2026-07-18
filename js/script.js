@@ -3,6 +3,17 @@ function tileUrlForTheme(theme) {
   return `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${window.MAPTILER_KEY}&language=en`;
 }
 
+function safeParseActs(acts) {
+  if (Array.isArray(acts)) return acts;
+  if (typeof acts === 'string')
+    try {
+      return JSON.parse(acts);
+    } catch {
+      return [];
+    }
+  return [];
+}
+
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -155,12 +166,15 @@ function initStatsWidget() {
 
   if (!widget || !pillValue || !daysEl || !hoursEl || !minutesEl || !secondsEl) return;
 
+  let countdownInterval;
+
   function updateCountdown() {
     const now = Date.now();
     const departure = new Date(window.TRIP_DEPARTURE_DATE).getTime();
 
     if (isNaN(departure)) {
       widget.classList.add('hidden');
+      if (countdownInterval) clearInterval(countdownInterval);
       return;
     }
 
@@ -168,6 +182,7 @@ function initStatsWidget() {
 
     if (diff < 0) {
       widget.classList.add('hidden');
+      if (countdownInterval) clearInterval(countdownInterval);
       return;
     }
 
@@ -191,7 +206,7 @@ function initStatsWidget() {
   updateCountdown();
 
   if (!widget.classList.contains('hidden')) {
-    setInterval(updateCountdown, 1000);
+    countdownInterval = setInterval(updateCountdown, 1000);
   }
 }
 
@@ -326,11 +341,7 @@ function buildPlacePopup(p) {
   pop.appendChild(titleEl);
 
   if (p.acts && p.acts.length) {
-    const actsArr = Array.isArray(p.acts)
-      ? p.acts
-      : typeof p.acts === 'string'
-        ? JSON.parse(p.acts)
-        : [];
+    const actsArr = safeParseActs(p.acts);
     const acts = el('ul', 'pop-acts');
     actsArr.slice(0, 4).forEach((a) => acts.appendChild(el('li', null, a)));
     if (actsArr.length > 4) {
@@ -371,7 +382,7 @@ function renderMap(days) {
     const zoomControl = L.control.zoom({ position: 'topright' });
     map.addControl(zoomControl);
 
-    map.on('popupopen', () => lucide.createIcons());
+    map.on('popupopen', () => lucide?.createIcons());
   }
 
   markers.forEach((m) => map.removeLayer(m));
@@ -479,7 +490,9 @@ function renderMap(days) {
     );
   });
 
-  map.fitBounds(L.latLngBounds(coords), { padding: [40, 60] });
+  if (coords.length) {
+    map.fitBounds(L.latLngBounds(coords), { padding: [40, 60] });
+  }
 }
 
 function setActive(i) {
@@ -675,11 +688,7 @@ function renderDayDetail(day) {
       body.appendChild(el('div', 'place-card-name', p.name));
 
       if (p.acts && p.acts.length) {
-        const actsArr = Array.isArray(p.acts)
-          ? p.acts
-          : typeof p.acts === 'string'
-            ? JSON.parse(p.acts)
-            : [];
+        const actsArr = safeParseActs(p.acts);
         if (actsArr.length) body.appendChild(el('div', 'place-card-acts', actsArr.join(' · ')));
       }
 

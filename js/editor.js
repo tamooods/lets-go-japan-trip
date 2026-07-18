@@ -269,7 +269,9 @@ async function searchPlaceHandler() {
     container.innerHTML = '<div class="search-result-item">ไม่พบสถานที่ ลองคลิกบนแผนที่</div>';
   } else {
     results.forEach((r) => {
-      const item = el('div', 'search-result-item', r.label);
+      const item = document.createElement('div');
+      item.className = 'search-result-item';
+      item.textContent = r.label;
       item.addEventListener('click', () => {
         _pendingLat = r.lat;
         _pendingLng = r.lng;
