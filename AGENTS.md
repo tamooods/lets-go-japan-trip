@@ -42,16 +42,18 @@ Migrations and seed are run manually in the Supabase SQL Editor (no CLI runner):
 | File           | Role                                                              |
 | -------------- | ----------------------------------------------------------------- |
 | `index.html`   | Single entry point; all modals inline                             |
-| `style.css`    | ~1900 lines: theme vars, splash, sidebar, map, modals, animations |
-| `script.js`    | Core app: `DAYS` global, `renderSidebar`, `renderMap`, `goTo`     |
-| `db.js`        | Supabase client init + `loadDays()`, `loadMembers()`              |
-| `selection.js` | Member-identity modal; persists choice in localStorage            |
-| `realtime.js`  | Supabase Realtime subscription on `days` table                    |
-| `editor.js`    | Day edit modal + optimistic lock RPC call                         |
-| `conflict.js`  | Conflict resolution modal (overwrite vs discard)                  |
+| `css/style.css` | ~1900 lines: theme vars, splash, sidebar, map, modals, animations |
+| `script.js`     | Core app: `DAYS` global, `renderSidebar`, `renderMap`, `goTo`     |
+| `db.js`         | Supabase client init + `loadDays()`, `loadMembers()`              |
+| `day-places.js` | Place CRUD via RPC (`add_day_place`, `update_day_place`, etc.)    |
+| `selection.js`  | Member-identity modal; persists choice in localStorage            |
+| `realtime.js`   | Supabase Realtime subscription on `days` table                    |
+| `editor.js`     | Day edit modal + optimistic lock RPC call                         |
+| `conflict.js`   | Conflict resolution modal (overwrite vs discard)                  |
+| `auth.js`       | Magic-link auth via `initAuth()` — **ยังไม่ได้ load ใน production** |
 
 **Script load order matters** (no ES modules, CDN globals):
-`config.js` → `db.js` → `selection.js` → `realtime.js` → `editor.js` → `conflict.js` → `script.js`
+`config.js` → `db.js` → `day-places.js` → `selection.js` → `realtime.js` → `editor.js` → `conflict.js` → `script.js`
 
 ## Key Conventions
 
@@ -65,5 +67,6 @@ Migrations and seed are run manually in the Supabase SQL Editor (no CLI runner):
 ## Pitfalls
 
 - Adding a new JS file? Add it to `index.html` in the correct load order position
+- `auth.js` มีไฟล์แต่ **ไม่ได้ load ใน `index.html`** — ต้องเพิ่ม script tag ก่อน `db.js` ถ้าจะเปิดใช้ auth
 - No error boundaries — `initApp()` throws uncaught if `loadDays()` fails
 - `editor.js` passes `p_actor: window.currentMember.name` (from selection.js) — relies on member flow completing before editing
