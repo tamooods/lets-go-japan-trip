@@ -148,6 +148,7 @@ let detailDayIndex = null,
 function formatTimeAgo(isoString) {
   if (!isoString) return '';
   const diffSec = Math.floor((Date.now() - new Date(isoString)) / 1000);
+  if (diffSec < 0) return 'เมื่อกี้';
   if (diffSec < 60) return 'เมื่อกี้';
   if (diffSec < 3600) return Math.floor(diffSec / 60) + ' นาทีที่แล้ว';
   if (diffSec < 86400) return Math.floor(diffSec / 3600) + ' ชม.ที่แล้ว';
@@ -673,6 +674,28 @@ function renderDayDetail(day) {
   const listEl = document.getElementById('dayList');
   listEl.textContent = '';
 
+  const dayNum = DAYS.indexOf(day) + 1;
+
+  const header = el('div', 'detail-header');
+  header.appendChild(
+    el('div', 'detail-header-title', 'วันที่ ' + dayNum + ' · ' + day.details.place),
+  );
+  if (day.details.date) {
+    const date = formatDateLabel(day.details.date);
+    header.appendChild(el('div', 'detail-header-date', date));
+  }
+  const pills = el('div', 'detail-header-pills');
+  if (day.details.jp) {
+    pills.appendChild(el('span', 'detail-pill', '📍 ' + day.details.jp));
+  }
+  if (day.details.acts && day.details.acts.length) {
+    const actsArr = safeParseActs(day.details.acts);
+    pills.appendChild(el('span', 'detail-pill', '🎯 ' + actsArr.length + ' activities'));
+  }
+  pills.appendChild(el('span', 'detail-pill', '📍 ' + places.length + ' places'));
+  header.appendChild(pills);
+  listEl.appendChild(header);
+
   if (!places.length) {
     const empty = el('div', 'place-empty', 'ยังไม่มีสถานที่ในวันนี้\nคลิก "+ Add Place" เพิ่มเลย!');
     listEl.appendChild(empty);
@@ -682,14 +705,38 @@ function renderDayDetail(day) {
       card.dataset.placeId = p.id;
       card.style.animationDelay = idx * 0.05 + 0.1 + 's';
 
-      const row = el('div', 'place-card-row');
-      const pin = append(el('div', 'place-pin'), el('span', null, String(idx + 1)));
-      const body = el('div', 'place-card-body');
-      body.appendChild(el('div', 'place-card-name', p.name));
+      const thumb = el('div', 'place-card-thumb');
+      if (p.img) {
+        const img = document.createElement('img');
+        img.src = p.img;
+        img.alt = p.name;
+        img.loading = 'lazy';
+        img.onerror = function () {
+          this.style.display = 'none';
+          const ph = document.createElement('div');
+          ph.className = 'place-card-thumb-placeholder';
+          ph.appendChild(icon('image-off', 20));
+          this.parentNode.appendChild(ph);
+        };
+        thumb.appendChild(img);
+      } else {
+        const ph = document.createElement('div');
+        ph.className = 'place-card-thumb-placeholder';
+        ph.appendChild(icon('image-off', 20));
+        thumb.appendChild(ph);
+      }
+      card.appendChild(thumb);
+
+      const content = el('div', 'place-card-content');
+
+      const headerRow = el('div', 'place-card-header');
+      headerRow.appendChild(el('span', 'place-card-badge', String(idx + 1)));
+      headerRow.appendChild(el('span', 'place-card-name', p.name));
+      content.appendChild(headerRow);
 
       if (p.acts && p.acts.length) {
         const actsArr = safeParseActs(p.acts);
-        if (actsArr.length) body.appendChild(el('div', 'place-card-acts', actsArr.join(' · ')));
+        if (actsArr.length) content.appendChild(el('div', 'place-card-acts', actsArr.join(' · ')));
       }
 
       const meta = el('div', 'place-card-meta');
@@ -710,35 +757,34 @@ function renderDayDetail(day) {
           meta.appendChild(splitSpan);
         }
       }
-
-      body.appendChild(meta);
+      if (meta.children.length) content.appendChild(meta);
 
       const actions = el('div', 'place-card-actions');
       const editBtn = el('button', 'place-edit-btn');
-      append(editBtn, icon('pencil', 14), document.createTextNode(' แก้ไข'));
+      editBtn.title = 'แก้ไข';
+      editBtn.appendChild(icon('pencil', 14));
       editBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         openPlaceEditor(day, p);
       });
       const delBtn = el('button', 'place-del-btn');
-      append(delBtn, icon('x', 14), document.createTextNode(' ลบ'));
+      delBtn.title = 'ลบ';
+      delBtn.appendChild(icon('trash-2', 14));
       delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         deletePlaceHandler(p);
       });
-      append(actions, editBtn, delBtn);
-      body.appendChild(actions);
-      append(row, pin, body);
-
       const focusBtn = el('button', 'place-card-focus');
-      focusBtn.appendChild(icon('map', 14));
       focusBtn.title = 'ดูบนแผนที่';
+      focusBtn.appendChild(icon('map', 14));
       focusBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (p.lat && p.lng) focusPlace(idx);
       });
-      append(row, focusBtn);
-      append(card, row);
+      append(actions, editBtn, delBtn, focusBtn);
+      content.appendChild(actions);
+
+      card.appendChild(content);
 
       card.addEventListener('click', () => {
         if (p.lat && p.lng) focusPlace(idx);

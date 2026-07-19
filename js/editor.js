@@ -273,6 +273,7 @@ async function searchPlaceHandler() {
       item.className = 'search-result-item';
       item.textContent = r.label;
       item.addEventListener('click', () => {
+        clearTimeout(_searchTimer);
         _pendingLat = r.lat;
         _pendingLng = r.lng;
         document.getElementById('place-editor-search').value = r.name;
