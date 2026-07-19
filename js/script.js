@@ -688,9 +688,12 @@ function renderDayDetail(day) {
   if (day.details.jp) {
     pills.appendChild(el('span', 'detail-pill', '📍 ' + day.details.jp));
   }
-  if (day.details.acts && day.details.acts.length) {
-    const actsArr = safeParseActs(day.details.acts);
-    pills.appendChild(el('span', 'detail-pill', '🎯 ' + actsArr.length + ' activities'));
+  const totalActs = places.reduce((sum, p) => {
+    const a = safeParseActs(p.acts);
+    return sum + (Array.isArray(a) ? a.length : 0);
+  }, 0);
+  if (totalActs > 0) {
+    pills.appendChild(el('span', 'detail-pill', '🎯 ' + totalActs + ' activities'));
   }
   pills.appendChild(el('span', 'detail-pill', '📍 ' + places.length + ' places'));
   header.appendChild(pills);
