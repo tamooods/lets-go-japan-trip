@@ -127,7 +127,7 @@ function updateCoordBadge() {
   }
 }
 
-function openPlaceEditor(day, place) {
+function openPlaceEditor(day, place, coords) {
   _editingPlaceDay = day;
   _editingPlace = place;
 
@@ -139,8 +139,8 @@ function openPlaceEditor(day, place) {
     place && place.acts ? (Array.isArray(place.acts) ? place.acts : JSON.parse(place.acts)) : [];
   document.getElementById('place-editor-acts').value = actsArr.join('\n');
   document.getElementById('place-editor-expense').value = place ? place.expense || 0 : 0;
-  _pendingLat = place ? place.lat || null : null;
-  _pendingLng = place ? place.lng || null : null;
+  _pendingLat = coords ? coords.lat : place ? place.lat || null : null;
+  _pendingLng = coords ? coords.lng : place ? place.lng || null : null;
   document.getElementById('place-editor-search').value = place ? place.name || '' : '';
   document.getElementById('place-editor-coord-card').classList.remove('invalid');
   document.getElementById('place-editor-coord-error').classList.add('hidden');
@@ -151,6 +151,21 @@ function openPlaceEditor(day, place) {
   renderSplitCheckboxes(place);
 
   document.getElementById('place-editor-modal').classList.remove('hidden');
+
+  const saveBtn = document.getElementById('place-editor-save');
+  saveBtn.disabled = false;
+  saveBtn.textContent = 'บันทึก';
+
+  if (coords && !place) {
+    const searchInput = document.getElementById('place-editor-search');
+    if (!searchInput.value.trim()) {
+      searchInput.placeholder = 'กำลังค้นหาชื่อสถานที่...';
+      reverseGeocodePlace(coords.lat, coords.lng).then((name) => {
+        searchInput.placeholder = 'ค้นหาชื่อสถานที่...';
+        if (name && !searchInput.value.trim()) searchInput.value = name;
+      });
+    }
+  }
 }
 
 function renderSplitCheckboxes(place) {
@@ -244,6 +259,15 @@ async function savePlaceEditor() {
   const data = { name, acts, expense, split_among, lat, lng };
 
   try {
+    const saveBtn = document.getElementById('place-editor-save');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'กำลังค้นหารูป...';
+
+    const img = await fetchPlaceImage(name);
+    if (img) data.img = img;
+
+    saveBtn.textContent = 'กำลังบันทึก...';
+
     if (_editingPlace) {
       await updatePlace(_editingPlace.id, data);
     } else {
@@ -255,6 +279,9 @@ async function savePlaceEditor() {
     renderDayDetail(day);
     renderPlaceMap(day);
   } catch (err) {
+    const saveBtn = document.getElementById('place-editor-save');
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'บันทึก';
     alert('เกิดข้อผิดพลาด: ' + err.message);
   }
 }

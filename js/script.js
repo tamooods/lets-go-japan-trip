@@ -1,6 +1,6 @@
 function tileUrlForTheme(theme) {
   const style = theme === 'dark' ? 'streets-v2-dark' : 'streets-v2';
-  return `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${window.MAPTILER_KEY}&language=en`;
+  return `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${window.MAPTILER_KEY}&language=th`;
 }
 
 function safeParseActs(acts) {
@@ -64,6 +64,7 @@ let DAYS = [];
 let places = [],
   placeMarkers = [],
   placePolylines = [],
+  placeBoundaryLayer = null,
   isDetailMode = false;
 let map,
   markers = [],
@@ -260,7 +261,7 @@ function renderSidebar(days) {
     });
     item.addEventListener('mouseleave', () => {
       const leg = (window._legLines || [])[i - 1];
-      if (leg) leg.setStyle({ weight: 1.5, opacity: 0.45, dashArray: '5 7' });
+      if (leg) leg.setStyle({ weight: 2.5, opacity: 0.7, dashArray: '6 8' });
     });
     if (d.last_editor_name) {
       const stamp = el(
@@ -375,7 +376,7 @@ function renderMap(days) {
   if (!map) {
     map = L.map('map', { zoomControl: false, attributionControl: true }).setView([36, 138.5], 7);
     tileLayer = L.tileLayer(tileUrlForTheme(document.documentElement.dataset.theme), {
-      maxZoom: 19,
+      maxZoom: 22,
       attribution:
         '© <a href="https://www.maptiler.com/copyright/">MapTiler</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
@@ -396,9 +397,9 @@ function renderMap(days) {
   for (let i = 1; i < coords.length; i++) {
     const leg = L.polyline([coords[i - 1], coords[i]], {
       color: '#c85c3a',
-      weight: 1.5,
-      opacity: 0.45,
-      dashArray: '5 7',
+      weight: 2.5,
+      opacity: 0.7,
+      dashArray: '6 8',
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(map);
@@ -613,8 +614,6 @@ async function enterDetail(i) {
   });
   (window._legLines || []).forEach((l) => map.removeLayer(l));
 
-  places = await loadDayPlaces(day.id);
-
   const headerActions = document.querySelector('.btn-group');
   headerActions.classList.add('hidden');
   detailBackBtn = el('button', 'detail-back-btn');
@@ -627,9 +626,24 @@ async function enterDetail(i) {
   listEl.textContent = '';
   listEl.classList.remove('day-list');
   listEl.classList.add('day-place-list');
+
+  const loadingEl = el('div', 'detail-loading');
+  loadingEl.appendChild(icon('loader', 24));
+  loadingEl.appendChild(el('span', null, 'กำลังโหลด...'));
+  listEl.appendChild(loadingEl);
+
+  places = await loadDayPlaces(day.id);
+
+  loadingEl.remove();
   renderDayDetail(day);
 
   renderPlaceMap(day);
+
+  map.on('click', (e) => {
+    if (!isDetailMode) return;
+    const { lat, lng } = e.latlng;
+    openPlaceEditor(day, null, { lat, lng });
+  });
 
   if (window.innerWidth <= 640) {
     document.querySelector('.sidebar').classList.add('open');
@@ -642,11 +656,18 @@ function exitDetail() {
   detailDayIndex = null;
   places = [];
 
+  map.off('click');
+
   placeMarkers.forEach((m) => map.removeLayer(m));
   placeMarkers = [];
 
   placePolylines.forEach((l) => map.removeLayer(l));
   placePolylines = [];
+
+  if (placeBoundaryLayer) {
+    map.removeLayer(placeBoundaryLayer);
+    placeBoundaryLayer = null;
+  }
 
   markers.forEach((m) => m.addTo(map));
 
@@ -688,16 +709,23 @@ function renderDayDetail(day) {
   if (day.details.jp) {
     pills.appendChild(el('span', 'detail-pill', '📍 ' + day.details.jp));
   }
-  const totalActs = places.reduce((sum, p) => {
-    const a = safeParseActs(p.acts);
-    return sum + (Array.isArray(a) ? a.length : 0);
-  }, 0);
-  if (totalActs > 0) {
-    pills.appendChild(el('span', 'detail-pill', '🎯 ' + totalActs + ' activities'));
+  const seedActs = day.details.acts || [];
+  if (seedActs.length > 0) {
+    pills.appendChild(el('span', 'detail-pill', '🎯 ' + seedActs.length + ' กิจกรรม'));
   }
   pills.appendChild(el('span', 'detail-pill', '📍 ' + places.length + ' places'));
   header.appendChild(pills);
+
+  if (seedActs.length > 0) {
+    const actList = el('div', 'detail-seed-acts');
+    seedActs.forEach((a) => actList.appendChild(el('div', 'detail-seed-act', '• ' + a)));
+    header.appendChild(actList);
+  }
   listEl.appendChild(header);
+
+  const addBtn = el('button', 'add-place-btn', '+ Add Place');
+  addBtn.addEventListener('click', () => openPlaceEditor(day, null));
+  listEl.appendChild(addBtn);
 
   if (!places.length) {
     const empty = el('div', 'place-empty', 'ยังไม่มีสถานที่ในวันนี้\nคลิก "+ Add Place" เพิ่มเลย!');
@@ -709,6 +737,7 @@ function renderDayDetail(day) {
       card.style.animationDelay = idx * 0.05 + 0.1 + 's';
 
       const thumb = el('div', 'place-card-thumb');
+      thumb.dataset.placeId = p.id;
       if (p.img) {
         const img = document.createElement('img');
         img.src = p.img;
@@ -724,8 +753,8 @@ function renderDayDetail(day) {
         thumb.appendChild(img);
       } else {
         const ph = document.createElement('div');
-        ph.className = 'place-card-thumb-placeholder';
-        ph.appendChild(icon('image-off', 20));
+        ph.className = 'place-card-thumb-placeholder thumb-loading';
+        ph.appendChild(icon('loader', 20));
         thumb.appendChild(ph);
       }
       card.appendChild(thumb);
@@ -796,10 +825,35 @@ function renderDayDetail(day) {
     });
   }
 
-  const addBtn = el('button', 'add-place-btn', '+ Add Place');
-  addBtn.addEventListener('click', () => openPlaceEditor(day, null));
-  listEl.appendChild(addBtn);
   lucide?.createIcons();
+
+  places.forEach(async (p) => {
+    if (p.img) return;
+    const url = await fetchPlaceThumbnail(p.name);
+    if (!isDetailMode) return;
+    const thumb = listEl.querySelector(`[data-place-id="${p.id}"]`);
+    if (!thumb) return;
+    const ph = thumb.querySelector('.thumb-loading');
+    if (!ph) return;
+    if (!url) {
+      ph.classList.remove('thumb-loading');
+      ph.textContent = '';
+      ph.appendChild(icon('image-off', 20));
+      return;
+    }
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = p.name;
+    img.loading = 'lazy';
+    img.onerror = function () {
+      this.style.display = 'none';
+      const newPh = document.createElement('div');
+      newPh.className = 'place-card-thumb-placeholder';
+      newPh.appendChild(icon('image-off', 20));
+      this.parentNode.appendChild(newPh);
+    };
+    ph.replaceWith(img);
+  });
 }
 
 function renderPlaceMap(day) {
@@ -807,6 +861,23 @@ function renderPlaceMap(day) {
   placeMarkers = [];
   placePolylines.forEach((l) => map.removeLayer(l));
   placePolylines = [];
+  if (placeBoundaryLayer) {
+    map.removeLayer(placeBoundaryLayer);
+    placeBoundaryLayer = null;
+  }
+
+  fetchDayBoundary(day.details.place).then((coords) => {
+    if (!coords || !isDetailMode) return;
+    placeBoundaryLayer = L.polygon(coords, {
+      color: '#c85c3a',
+      weight: 3,
+      opacity: 0.7,
+      dashArray: '8 5',
+      fillColor: '#c85c3a',
+      fillOpacity: 0.04,
+      className: 'day-boundary',
+    }).addTo(map);
+  });
 
   const validPlaces = places.filter((p) => p.lat && p.lng);
   if (!validPlaces.length) {
@@ -819,11 +890,11 @@ function renderPlaceMap(day) {
   for (let i = 1; i < validPlaces.length; i++) {
     const pl = L.polyline([coords[i - 1], coords[i]], {
       color: '#5b7fa0',
-      weight: 2,
-      opacity: 0.5,
+      weight: 3,
+      opacity: 0.7,
       lineCap: 'round',
       lineJoin: 'round',
-      dashArray: '4 6',
+      dashArray: '6 8',
     }).addTo(map);
     placePolylines.push(pl);
   }
@@ -851,19 +922,22 @@ function renderPlaceMap(day) {
     placeMarkers.push(m);
   });
 
-  map.fitBounds(L.latLngBounds(coords), { padding: [50, 60], maxZoom: 15 });
+  map.fitBounds(L.latLngBounds(coords), { padding: [50, 60], maxZoom: 17 });
 }
 
 function focusPlace(idx) {
   const p = places[idx];
   if (!p || !p.lat || !p.lng) return;
-  map.flyTo([p.lat, p.lng], 15, { duration: 0.6 });
+  map.flyTo([p.lat, p.lng], 17, { duration: 0.6 });
   map.once('moveend', () => {
     if (placeMarkers[idx]) placeMarkers[idx].openPopup();
   });
   document.querySelectorAll('.place-card').forEach((c) => c.classList.remove('active'));
   const cards = document.querySelectorAll('.place-card');
-  if (cards[idx]) cards[idx].classList.add('active');
+  if (cards[idx]) {
+    cards[idx].classList.add('active');
+    cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 async function deletePlaceHandler(p) {

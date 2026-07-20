@@ -2212,6 +2212,20 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
   padding: 0.5rem 0.75rem;
 }
 
+.detail-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  color: var(--gray);
+  font-size: 0.85rem;
+}
+.detail-loading svg {
+  animation: thumbPulse 1.2s ease-in-out infinite;
+}
+
 .place-empty {
   text-align: center;
   color: var(--gray);
@@ -2251,13 +2265,14 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
 }
 
 .place-card {
-  --rot: 0deg;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
   background: var(--paper);
-  border-radius: 4px;
-  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  overflow: hidden;
   margin-bottom: 0.6rem;
   cursor: pointer;
-  position: relative;
   opacity: 0;
   transform: translateY(8px);
   animation: revealItem 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -2265,83 +2280,100 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
     box-shadow 0.2s,
     transform 0.15s;
   border: 1px solid var(--line);
-  box-shadow: 2px 4px 10px rgba(74, 56, 38, 0.12);
-}
-.place-card:nth-child(3n + 1) {
-  --rot: -0.6deg;
-}
-.place-card:nth-child(3n + 2) {
-  --rot: 0.5deg;
-}
-.place-card:nth-child(3n) {
-  --rot: -0.3deg;
-}
-.place-card::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  left: 14px;
-  width: 22px;
-  height: 12px;
-  background: var(--tape);
-  transform: rotate(-6deg);
+  box-shadow: 0 2px 8px rgba(74, 56, 38, 0.1);
 }
 .place-card:hover {
-  box-shadow: 0 6px 16px rgba(200, 92, 58, 0.12);
-  transform: translateY(-2px) rotate(var(--rot));
+  box-shadow: 0 4px 14px rgba(200, 92, 58, 0.12);
+  transform: translateY(-1px);
 }
 .place-card.active {
   border-color: var(--red);
-  box-shadow: 0 6px 18px rgba(200, 92, 58, 0.16);
-  transform: translateY(0) rotate(0deg);
+  border-width: 2px;
+  box-shadow: 0 4px 14px rgba(200, 92, 58, 0.15);
 }
 
-.place-card-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-}
-
-.place-pin {
+.place-card-thumb {
   flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  min-width: 26px;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  border: 1.5px dashed var(--red);
-  background: var(--paper);
-  color: var(--red);
-  font-family: var(--font-hand);
-  font-size: 0.9rem;
-  font-weight: 700;
+  width: 88px;
+  height: 88px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0.6rem;
+  background: linear-gradient(135deg, var(--line), var(--cream));
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 2px;
 }
-.place-pin span {
-  transform: rotate(45deg);
+.place-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.place-card-thumb-placeholder {
+  color: var(--gray);
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.thumb-loading {
+  animation: thumbPulse 1.5s ease-in-out infinite;
+}
+@keyframes thumbPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
-.place-card-body {
+.place-card-content {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.65rem 0.65rem 0.65rem 0;
+  gap: 0.2rem;
+}
+
+.place-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.place-card-badge {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .place-card-name {
   font-weight: 600;
   font-size: 0.9rem;
-  margin-bottom: 0.15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .place-card-acts {
   font-size: 0.75rem;
   color: var(--gray);
   line-height: 1.4;
-  margin-bottom: 0.2rem;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -2349,9 +2381,10 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
 .place-card-meta {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   font-size: 0.75rem;
   flex-wrap: wrap;
+  margin-top: 0.1rem;
 }
 
 .place-card-expense {
@@ -2362,43 +2395,69 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
 .place-card-split {
   color: var(--blue);
   font-size: 0.7rem;
-}
-
-.place-card-focus {
-  flex-shrink: 0;
-  background: none;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 0.25rem 0.4rem;
-  cursor: pointer;
-  font-size: 0.85rem;
-  line-height: 1;
-  margin-top: 2px;
-}
-.place-card-focus:hover {
-  background: var(--line);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
 }
 
 .place-card-actions {
   display: flex;
+  align-items: center;
   gap: 0.3rem;
-  margin-top: 0.3rem;
+  margin-top: 0.25rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid var(--line);
 }
+
 .place-edit-btn,
 .place-del-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
-  border: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.7rem;
   color: var(--gray);
-  padding: 0.1rem 0.2rem;
+  padding: 0.25rem 0.35rem;
   font-family: inherit;
+  line-height: 1;
+  transition: all 0.15s;
 }
 .place-edit-btn:hover {
   color: var(--ink);
+  border-color: var(--ink);
+  background: rgba(42, 32, 24, 0.04);
 }
 .place-del-btn:hover {
   color: var(--red);
+  border-color: var(--red);
+  background: rgba(200, 92, 58, 0.06);
+}
+
+.place-card-focus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  background: rgba(200, 92, 58, 0.08);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.25rem 0.35rem;
+  cursor: pointer;
+  color: var(--red);
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.place-card-focus:hover {
+  background: var(--red);
+  color: #fff;
+}
+.place-card.active .place-card-focus {
+  background: var(--red);
+  color: #fff;
 }
 
 .add-place-btn {
@@ -2423,6 +2482,63 @@ input[type='date'].modal-input::-webkit-calendar-picker-indicator {
 .add-place-btn:hover {
   border-color: var(--red);
   color: var(--red);
+}
+
+.detail-header {
+  padding: 0.5rem 0 0.8rem;
+}
+.detail-header-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+.detail-header-date {
+  font-size: 0.75rem;
+  color: var(--gray);
+  margin-bottom: 0.5rem;
+}
+.detail-header-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.detail-seed-acts {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.detail-seed-act {
+  font-size: 0.75rem;
+  color: var(--gray);
+  line-height: 1.4;
+}
+.detail-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--gray);
+  background: rgba(42, 32, 24, 0.06);
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+[data-theme='dark'] .detail-pill {
+  background: rgba(232, 223, 200, 0.08);
+}
+
+@media (max-width: 640px) {
+  .place-card {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .place-edit-btn,
+  .place-del-btn,
+  .place-card-focus {
+    min-width: 32px;
+    min-height: 32px;
+  }
 }
 
 .place-editor-box {
