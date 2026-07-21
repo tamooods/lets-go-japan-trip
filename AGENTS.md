@@ -24,7 +24,7 @@ npx serve .
 # or open index.html directly in a browser
 ```
 
-**Required:** Copy `config.example.js` → `config.js` and fill in Supabase credentials. Without it, the app silently fails (`window.SUPABASE_URL` is undefined). `config.js` is gitignored.
+**Required:** Copy `config.example.js` → `config.js` and fill in Supabase credentials + MAPTILER_KEY + UNSPLASH_ACCESS_KEY. Without it, the app silently fails (`window.SUPABASE_URL` is undefined). `config.js` is gitignored.
 
 ## Deploy
 
@@ -34,7 +34,7 @@ Push to Vercel. `vercel.json` injects env vars as `config.js` at build time — 
 
 Migrations and seed are run manually in the Supabase SQL Editor (no CLI runner):
 
-- Migrations: `supabase/migrations/` — run in order
+- Migrations: `supabase/migrations/` (001–008) — run in order
 - Seed: `supabase/seed.sql` — requires an active Supabase session (`auth.uid()` used as owner)
 
 ## Architecture
@@ -42,7 +42,7 @@ Migrations and seed are run manually in the Supabase SQL Editor (no CLI runner):
 | File            | Role                                                                |
 | --------------- | ------------------------------------------------------------------- |
 | `index.html`    | Single entry point; all modals inline                               |
-| `css/style.css` | ~1900 lines: theme vars, splash, sidebar, map, modals, animations   |
+| `css/style.css` | ~2700 lines: theme vars, splash, sidebar, map, modals, animations   |
 | `script.js`     | Core app: `DAYS` global, `renderSidebar`, `renderMap`, `goTo`       |
 | `db.js`         | Supabase client init + `loadDays()`, `loadMembers()`                |
 | `day-places.js` | Place CRUD via RPC (`add_day_place`, `update_day_place`, etc.)      |

@@ -20,7 +20,7 @@ Quick commands
   - npm run lint — ESLint check
   - npm run check — both lint + format check
 - Runtime config (required):
-  - Copy and edit config.example.js → config.js and fill Supabase credentials before running locally. (config.js is gitignored in this repo.)
+  - Copy and edit config.example.js → config.js and fill Supabase credentials, MAPTILER_KEY, and UNSPLASH_ACCESS_KEY before running locally. (config.js is gitignored in this repo.)
   - On Vercel the repo uses vercel.json to write a runtime config.js at build time (see Deploy below).
 - If you add a package.json (for tooling or migration), typical commands we use when migrating to Vite/React/TS are: (example)
   - pnpm init -y
@@ -32,20 +32,20 @@ Quick commands
 Deploy / hosting
 
 - Vercel: vercel.json contains a buildCommand that echoes env values into config.js and sets outputDirectory: "." — note this behavior when changing build tooling.
-- Database migrations and seed: Located in supabase/migrations/ and supabase/seed.sql; these are intended to be run in the Supabase SQL Editor (no CLI migration runner in repo).
+- Database migrations and seed: Located in supabase/migrations/ (001–008) and supabase/seed.sql; these are intended to be run in the Supabase SQL Editor (no CLI migration runner in repo).
 
 High-level architecture (big-picture)
 
 - Single-entry static HTML: index.html loads a small set of ordered scripts and assets.
 - Script load order matters (the app relies on globals):
-  - config.js → db.js → selection.js → realtime.js → editor.js → conflict.js → script.js
+  - config.js → db.js → day-places.js → selection.js → realtime.js → editor.js → conflict.js → script.js
 - File responsibilities (high-level):
 
 - .editorconfig, .prettierrc, eslint.config.js — Dev tooling config (indent, formatting, lint rules)
 - package.json — npm scripts for lint/format (no runtime dependencies)
   - index.html — entry point, splash screen, sidebar markup, all modals (editor, conflict, selection) inline
   - config.example.js / config.js — runtime values (SUPABASE URL/KEY, TRIP_ITINERARY_ID)
-  - style.css — ~1900 lines: theme vars, splash, sidebar, map, modals, animations
+  - style.css — ~2700 lines: theme vars, splash, sidebar, map, modals, animations
   - db.js — Supabase client creation, loadDays(), and loadMembers()
   - selection.js — member-identity modal; persists choice in localStorage as window.currentMember
   - realtime.js — Supabase Realtime subscription on the days table; updates DAYS + re-renders
