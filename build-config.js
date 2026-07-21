@@ -1,0 +1,3 @@
+const keys = ['SUPABASE_URL','SUPABASE_ANON_KEY','TRIP_ITINERARY_ID','TRIP_DEPARTURE_DATE','MAPTILER_KEY','UNSPLASH_ACCESS_KEY'];
+const lines = keys.map(k => 'window.' + k + '=' + JSON.stringify(process.env[k] || '') + ';');
+require('fs').writeFileSync('config.js', lines.join('\n') + '\n');
