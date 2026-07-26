@@ -114,7 +114,7 @@ let _editingPlace = null;
 let _editingPlaceDay = null;
 let _pendingLat = null;
 let _pendingLng = null;
-let _placePickMode = false;
+window._placePickMode = false;
 
 function updateCoordBadge() {
   const badge = document.getElementById('place-editor-coord-badge');
@@ -135,8 +135,7 @@ function openPlaceEditor(day, place, coords) {
   document.getElementById('place-editor-title').textContent = isNew
     ? 'เพิ่มสถานที่'
     : 'แก้ไขสถานที่';
-  const actsArr =
-    place && place.acts ? (Array.isArray(place.acts) ? place.acts : JSON.parse(place.acts)) : [];
+  const actsArr = place ? safeParseActs(place.acts) : [];
   document.getElementById('place-editor-acts').value = actsArr.join('\n');
   document.getElementById('place-editor-expense').value = place ? place.expense || 0 : 0;
   _pendingLat = coords ? coords.lat : place ? place.lat || null : null;
@@ -211,7 +210,7 @@ function closePlaceEditor() {
   _editingPlaceDay = null;
   _pendingLat = null;
   _pendingLng = null;
-  _placePickMode = false;
+  window._placePickMode = false;
   const modal = document.getElementById('place-editor-modal');
   modal.classList.add('hidden');
   modal.classList.remove('picking');
@@ -316,7 +315,7 @@ async function searchPlaceHandler() {
 }
 
 function enablePlacePickMode() {
-  _placePickMode = true;
+  window._placePickMode = true;
   document.getElementById('place-editor-modal').classList.add('picking');
   document.getElementById('place-editor-search').placeholder = 'คลิกบนแผนที่เพื่อเลือกพิกัด...';
   map.once('click', placePickHandler);
@@ -327,7 +326,7 @@ async function placePickHandler(e) {
   _pendingLng = e.latlng.lng;
   document.getElementById('place-editor-coord-card').classList.remove('invalid');
   document.getElementById('place-editor-coord-error').classList.add('hidden');
-  _placePickMode = false;
+  window._placePickMode = false;
   document.getElementById('place-editor-modal').classList.remove('picking');
   const searchInput = document.getElementById('place-editor-search');
   searchInput.placeholder = 'ค้นหาชื่อสถานที่...';
@@ -369,7 +368,7 @@ document.getElementById('place-editor-pick-btn').addEventListener('click', () =>
   enablePlacePickMode();
 });
 document.getElementById('place-pick-cancel').addEventListener('click', () => {
-  _placePickMode = false;
+  window._placePickMode = false;
   document.getElementById('place-editor-modal').classList.remove('picking');
   document.getElementById('place-editor-search').placeholder = 'ค้นหาชื่อสถานที่...';
   if (map) map.off('click', placePickHandler);

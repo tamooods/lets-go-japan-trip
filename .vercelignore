@@ -1,0 +1,6 @@
+supabase/
+*.md
+eslint.config.js
+package*.json
+.prettierrc
+.editorconfig

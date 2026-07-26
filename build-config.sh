@@ -1,4 +1,7 @@
 #!/bin/sh
+set -eu
+: "${SUPABASE_URL:?}" "${SUPABASE_ANON_KEY:?}" "${TRIP_ITINERARY_ID:?}"
+
 cat > config.js << EOF
 window.SUPABASE_URL='$(printf '%s' "$SUPABASE_URL" | sed "s/'/\\\\'/g")';
 window.SUPABASE_ANON_KEY='$(printf '%s' "$SUPABASE_ANON_KEY" | sed "s/'/\\\\'/g")';

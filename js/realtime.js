@@ -19,6 +19,7 @@ function handleDayChange(payload) {
   const { eventType } = payload;
   const newRow = payload.new;
   const oldRow = payload.old;
+  const currentDetailId = isDetailMode ? DAYS[detailDayIndex]?.id : null;
 
   if (eventType === 'UPDATE') {
     const idx = DAYS.findIndex((d) => d.id === newRow.id);
@@ -28,22 +29,34 @@ function handleDayChange(payload) {
       return;
     }
     DAYS[idx] = newRow;
-    renderSidebar(DAYS);
-    renderMap(DAYS);
   }
 
   if (eventType === 'INSERT') {
+    if (DAYS.some((d) => d.id === newRow.id)) return;
     DAYS.push(newRow);
     DAYS.sort((a, b) => a.day_index - b.day_index);
-    renderSidebar(DAYS);
-    renderMap(DAYS);
   }
 
   if (eventType === 'DELETE') {
     DAYS = DAYS.filter((d) => d.id !== oldRow.id);
-    renderSidebar(DAYS);
-    renderMap(DAYS);
   }
+
+  // Detail view owns #dayList and the map markers while active — skip the
+  // sidebar/day-marker re-render so it doesn't clobber that view, and keep
+  // detailDayIndex pointing at the right row instead of a stale position.
+  if (isDetailMode) {
+    if (currentDetailId === null) return;
+    const newIdx = DAYS.findIndex((d) => d.id === currentDetailId);
+    if (newIdx === -1) {
+      exitDetail();
+    } else {
+      detailDayIndex = newIdx;
+    }
+    return;
+  }
+
+  renderSidebar(DAYS);
+  renderMap(DAYS);
 }
 
 function initPlaceRealtime() {
@@ -80,6 +93,5 @@ function showServerUpdatedIndicator(newRow) {
   const indicator = document.getElementById('editor-server-update');
   if (!indicator) return;
   indicator.textContent = '\u26a0\ufe0f ข้อมูลบน server เปลี่ยนแล้วขณะที่คุณกำลังแก้';
-  indicator.dataset.pendingRow = JSON.stringify(newRow);
   indicator.style.display = 'block';
 }

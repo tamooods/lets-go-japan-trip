@@ -48,7 +48,7 @@ async function reverseGeocodePlace(lat, lng) {
     `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}` +
     '&format=json&accept-language=th&zoom=18';
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'LetsGoJapanTrip/1.0' } });
+    const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
     if (!data || data.error) return null;
@@ -66,7 +66,7 @@ async function searchPlaceName(query) {
     encodeURIComponent(q) +
     '&limit=5&format=json&accept-language=th,en,ja';
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'LetsGoJapanTrip/1.0' } });
+    const res = await fetch(url);
     if (!res.ok) return [];
     const data = await res.json();
     return (data || []).map((f) => ({
@@ -156,7 +156,7 @@ async function fetchDayBoundary(placeName) {
     encodeURIComponent(name) +
     '&format=json&polygon_geojson=1&limit=1';
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'LetsGoJapanTrip/1.0' } });
+    const res = await fetch(url);
     if (!res.ok) {
       _boundaryCache.set(name, null);
       return null;
@@ -191,6 +191,6 @@ const _thumbCache = new Map();
 async function fetchPlaceThumbnail(name) {
   if (_thumbCache.has(name)) return _thumbCache.get(name);
   const url = await fetchPlaceImage(name);
-  if (url) _thumbCache.set(name, url);
+  _thumbCache.set(name, url || null);
   return url || null;
 }

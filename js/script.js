@@ -640,7 +640,7 @@ async function enterDetail(i) {
   renderPlaceMap(day);
 
   map.on('click', (e) => {
-    if (!isDetailMode) return;
+    if (!isDetailMode || window._placePickMode) return;
     const { lat, lng } = e.latlng;
     openPlaceEditor(day, null, { lat, lng });
   });
@@ -979,6 +979,9 @@ async function initApp() {
     await initApp();
   } catch (err) {
     console.error('Failed to initialize app:', err);
+    document.getElementById('splash')?.classList.add('hidden');
+    alert('โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่');
+    location.reload();
   }
 
   try {

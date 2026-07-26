@@ -1,0 +1,6 @@
+supabase/
+assets/
+package-lock.json
+config.js
+node_modules/
+.claude/
