@@ -35,7 +35,7 @@ document.getElementById('conflict-overwrite').addEventListener('click', async ()
   if (idx !== -1) {
     DAYS[idx] = data.row;
     renderSidebar(DAYS);
-    renderMap(DAYS);
+    if (!refreshMarker(idx)) renderMap(DAYS);
   }
   closeConflictModal();
   closeEditor();
@@ -48,7 +48,7 @@ document.getElementById('conflict-discard').addEventListener('click', () => {
   if (idx !== -1) {
     DAYS[idx] = serverRow;
     renderSidebar(DAYS);
-    renderMap(DAYS);
+    if (!refreshMarker(idx)) renderMap(DAYS);
   }
   closeConflictModal();
   closeEditor();

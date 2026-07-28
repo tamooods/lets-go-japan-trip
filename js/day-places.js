@@ -64,7 +64,7 @@ async function searchPlaceName(query) {
   const url =
     'https://nominatim.openstreetmap.org/search?q=' +
     encodeURIComponent(q) +
-    '&limit=5&format=json&accept-language=th,en,ja';
+    '&limit=5&format=json&accept-language=th,en,ja&countrycodes=jp';
   try {
     const res = await fetch(url);
     if (!res.ok) return [];
@@ -89,13 +89,14 @@ async function fetchPlaceImage(placeName) {
       const url =
         'https://api.unsplash.com/search/photos?query=' +
         encodeURIComponent(name + ' Japan') +
+        // ponytail: small = 400px — popup กว้าง 280px, thumb 60px, regular (1080px) เปลืองเปล่า
         '&per_page=1&orientation=landscape&client_id=' +
         window.UNSPLASH_ACCESS_KEY;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         if (data.results && data.results.length) {
-          return data.results[0].urls.regular;
+          return data.results[0].urls.small || data.results[0].urls.regular;
         }
       }
     } catch {
@@ -109,11 +110,12 @@ async function fetchPlaceImage(placeName) {
     const res = await fetch(summaryUrl);
     if (res.ok) {
       const data = await res.json();
-      if (data.originalimage && data.originalimage.source) {
-        return data.originalimage.source;
-      }
+      // ponytail: thumbnail ก่อน — originalimage คือไฟล์ต้นฉบับ Wikimedia (3000px+, หลาย MB)
       if (data.thumbnail && data.thumbnail.source) {
         return data.thumbnail.source;
+      }
+      if (data.originalimage && data.originalimage.source) {
+        return data.originalimage.source;
       }
     }
   } catch {
@@ -137,10 +139,10 @@ async function fetchPlaceImage(placeName) {
     );
     if (!summaryRes.ok) return null;
     const summaryData = await summaryRes.json();
-    if (summaryData.originalimage && summaryData.originalimage.source) {
-      return summaryData.originalimage.source;
+    if (summaryData.thumbnail && summaryData.thumbnail.source) {
+      return summaryData.thumbnail.source;
     }
-    return (summaryData.thumbnail && summaryData.thumbnail.source) || null;
+    return (summaryData.originalimage && summaryData.originalimage.source) || null;
   } catch {
     return null;
   }

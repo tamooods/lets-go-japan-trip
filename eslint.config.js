@@ -30,6 +30,7 @@ export default [
         safeParseActs: 'readonly',
         renderSidebar: 'readonly',
         renderMap: 'readonly',
+        refreshMarker: 'readonly',
         goTo: 'readonly',
         initApp: 'readonly',
         initStatsWidget: 'readonly',

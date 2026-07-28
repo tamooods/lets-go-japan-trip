@@ -1,6 +1,6 @@
 function tileUrlForTheme(theme) {
   const style = theme === 'dark' ? 'streets-v2-dark' : 'streets-v2';
-  return `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${window.MAPTILER_KEY}&language=th`;
+  return `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}{r}.png?key=${window.MAPTILER_KEY}&language=th`;
 }
 
 function safeParseActs(acts) {
@@ -68,10 +68,12 @@ let places = [],
   isDetailMode = false;
 let map,
   markers = [],
+  dayMarkerCluster = null,
   curIdx = null;
 let tileLayer = null;
 let detailDayIndex = null,
-  detailBackBtn = null;
+  detailBackBtn = null,
+  detailMapClick = null;
 
 (function initTheme() {
   const saved = localStorage.getItem('theme');
@@ -377,6 +379,7 @@ function renderMap(days) {
     map = L.map('map', { zoomControl: false, attributionControl: true }).setView([36, 138.5], 7);
     tileLayer = L.tileLayer(tileUrlForTheme(document.documentElement.dataset.theme), {
       maxZoom: 22,
+      detectRetina: true,
       attribution:
         '© <a href="https://www.maptiler.com/copyright/">MapTiler</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
@@ -387,7 +390,25 @@ function renderMap(days) {
     map.on('popupopen', () => lucide?.createIcons());
   }
 
-  markers.forEach((m) => map.removeLayer(m));
+  if (dayMarkerCluster) map.removeLayer(dayMarkerCluster);
+  dayMarkerCluster = L.markerClusterGroup({
+    showCoverageOnHover: false,
+    maxClusterRadius: 45,
+    iconCreateFunction: (cluster) => {
+      const div = document.createElement('div');
+      div.className = 'mk mk-cluster';
+      const span = document.createElement('span');
+      span.className = 'mn';
+      span.textContent = String(cluster.getChildCount());
+      div.appendChild(span);
+      return L.divIcon({
+        className: '',
+        html: div.outerHTML,
+        iconSize: [40, 48],
+        iconAnchor: [20, 47],
+      });
+    },
+  });
   markers = [];
 
   const coords = days.map((d) => [d.details.lat, d.details.lng]);
@@ -414,9 +435,6 @@ function renderMap(days) {
   });
 
   days.forEach((d, i) => {
-    const offsetDiv = document.createElement('div');
-    offsetDiv.className = 'mk-offset';
-    offsetDiv.id = 'mkoff' + i;
     const mkDiv = document.createElement('div');
     mkDiv.className = 'mk';
     mkDiv.id = 'mk' + i;
@@ -424,77 +442,56 @@ function renderMap(days) {
     mkSpan.className = 'mn';
     mkSpan.textContent = String(i + 1);
     mkDiv.appendChild(mkSpan);
-    offsetDiv.appendChild(mkDiv);
 
     const icon = L.divIcon({
       className: '',
-      html: offsetDiv.outerHTML,
+      html: mkDiv.outerHTML,
       iconSize: [40, 48],
       iconAnchor: [20, 47],
       popupAnchor: [0, -50],
     });
 
-    const m = L.marker(coords[i], { icon })
-      .bindPopup(buildPopup(d, i), { maxWidth: 280 })
-      .addTo(map);
+    const m = L.marker(coords[i], { icon }).bindPopup(buildPopup(d, i), { maxWidth: 280 });
     m.on('click', () => setActive(i));
     markers.push(m);
+    dayMarkerCluster.addLayer(m);
   });
 
-  function declutterMarkerIcons() {
-    const pts = coords.map((c) => map.latLngToContainerPoint(c));
-    const targets = pts.map((p) => ({ x: p.x, y: p.y }));
-    const minDist = 28;
-    for (let pass = 0; pass < 8; pass++) {
-      for (let i = 0; i < targets.length; i++) {
-        for (let j = i + 1; j < targets.length; j++) {
-          const dx = targets[j].x - targets[i].x;
-          const dy = targets[j].y - targets[i].y;
-          const dist = Math.hypot(dx, dy) || 0.01;
-          if (dist < minDist) {
-            const push = (minDist - dist) / 2;
-            const ux = dx / dist;
-            const uy = dy / dist;
-            targets[i].x -= ux * push;
-            targets[i].y -= uy * push;
-            targets[j].x += ux * push;
-            targets[j].y += uy * push;
-          }
-        }
-      }
-    }
-    targets.forEach((t, i) => {
-      const el = document.getElementById('mkoff' + i);
-      if (!el) return;
-      const dx = t.x - pts[i].x;
-      const dy = t.y - pts[i].y;
-      el.style.transform =
-        Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5 ? `translate(${dx}px, ${dy}px)` : '';
-    });
-  }
-  if (window._declutterHandler) map.off('zoom move', window._declutterHandler);
-  window._declutterHandler = declutterMarkerIcons;
-  map.on('zoom move', window._declutterHandler);
-  map.once('moveend', declutterMarkerIcons);
-
-  markers.forEach((_, i) => {
-    const mkEl = document.getElementById('mk' + i);
-    if (!mkEl) return;
-    mkEl.style.opacity = '0';
-    mkEl.style.transform = 'rotate(-45deg) scale(0.2)';
-    mkEl.style.transition = 'opacity 0.4s, transform 0.5s cubic-bezier(0.34,1.56,0.64,1)';
-    setTimeout(
-      () => {
-        mkEl.style.opacity = '1';
-        mkEl.style.transform = 'rotate(-45deg) scale(1)';
-      },
-      400 + i * 110,
-    );
-  });
+  map.addLayer(dayMarkerCluster);
 
   if (coords.length) {
     map.fitBounds(L.latLngBounds(coords), { padding: [40, 60] });
   }
+
+  map.once('moveend', () => {
+    markers.forEach((_, i) => {
+      const mkEl = document.getElementById('mk' + i);
+      if (!mkEl) return;
+      mkEl.style.opacity = '0';
+      mkEl.style.transform = 'rotate(-45deg) scale(0.2)';
+      mkEl.style.transition = 'opacity 0.4s, transform 0.5s cubic-bezier(0.34,1.56,0.64,1)';
+      setTimeout(
+        () => {
+          mkEl.style.opacity = '1';
+          mkEl.style.transform = 'rotate(-45deg) scale(1)';
+        },
+        400 + i * 110,
+      );
+    });
+  });
+}
+
+// ponytail: patch popup ของ marker เดียว คืน false ถ้าพิกัดขยับ (ต้อง renderMap ใหม่เพราะ
+// เส้น leg ต้องขยับตาม). renderMap ทั้งชุดทุก UPDATE = animation เล่นซ้ำ + fitBounds
+// เด้งกล้องคนที่กำลังดูวันอื่นอยู่
+function refreshMarker(i) {
+  const m = markers[i];
+  const d = DAYS[i];
+  if (!m || !d) return false;
+  const ll = m.getLatLng();
+  if (ll.lat !== d.details.lat || ll.lng !== d.details.lng) return false;
+  m.setPopupContent(buildPopup(d, i));
+  return true;
 }
 
 function setActive(i) {
@@ -517,7 +514,13 @@ function setActive(i) {
 
 function goTo(i) {
   map.flyTo([DAYS[i].details.lat, DAYS[i].details.lng], 12, { duration: 1.1 });
-  map.once('moveend', () => markers[i].openPopup());
+  map.once('moveend', () => {
+    if (dayMarkerCluster.getVisibleParent(markers[i]) === markers[i]) {
+      markers[i].openPopup();
+    } else {
+      dayMarkerCluster.zoomToShowLayer(markers[i], () => markers[i].openPopup());
+    }
+  });
   setActive(i);
   if (window.innerWidth <= 640 && window._closeMobileDrawer) window._closeMobileDrawer();
 }
@@ -609,9 +612,7 @@ async function enterDetail(i) {
   isDetailMode = true;
   detailDayIndex = i;
 
-  markers.forEach((m) => {
-    if (map.hasLayer(m)) map.removeLayer(m);
-  });
+  if (dayMarkerCluster && map.hasLayer(dayMarkerCluster)) map.removeLayer(dayMarkerCluster);
   (window._legLines || []).forEach((l) => map.removeLayer(l));
 
   const headerActions = document.querySelector('.btn-group');
@@ -632,18 +633,22 @@ async function enterDetail(i) {
   loadingEl.appendChild(el('span', null, 'กำลังโหลด...'));
   listEl.appendChild(loadingEl);
 
-  places = await loadDayPlaces(day.id);
+  const fresh = await loadDayPlaces(day.id);
+  // ponytail: กด "กลับ" ระหว่างโหลดอยู่ — ทิ้งผลไป ไม่งั้น render ทับ view ที่ออกไปแล้ว
+  if (!isDetailMode || detailDayIndex !== i) return;
+  places = fresh;
 
   loadingEl.remove();
   renderDayDetail(day);
 
   renderPlaceMap(day);
 
-  map.on('click', (e) => {
+  detailMapClick = (e) => {
     if (!isDetailMode || window._placePickMode) return;
     const { lat, lng } = e.latlng;
     openPlaceEditor(day, null, { lat, lng });
-  });
+  };
+  map.on('click', detailMapClick);
 
   if (window.innerWidth <= 640) {
     document.querySelector('.sidebar').classList.add('open');
@@ -656,7 +661,10 @@ function exitDetail() {
   detailDayIndex = null;
   places = [];
 
-  map.off('click');
+  if (detailMapClick) {
+    map.off('click', detailMapClick); // ponytail: ระบุ handler — off('click') เปล่าถอดของ Leaflet ด้วย
+    detailMapClick = null;
+  }
 
   placeMarkers.forEach((m) => map.removeLayer(m));
   placeMarkers = [];
@@ -669,7 +677,7 @@ function exitDetail() {
     placeBoundaryLayer = null;
   }
 
-  markers.forEach((m) => m.addTo(map));
+  if (dayMarkerCluster) dayMarkerCluster.addTo(map);
 
   (window._legLines || []).forEach((l) => l.addTo(map));
 
@@ -978,10 +986,18 @@ async function initApp() {
   try {
     await initApp();
   } catch (err) {
+    // ponytail: อยู่บน splash + ปุ่มลองใหม่ — reload อัตโนมัติทำให้วนไม่จบตอน Supabase ล่ม
     console.error('Failed to initialize app:', err);
-    document.getElementById('splash')?.classList.add('hidden');
-    alert('โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่');
-    location.reload();
+    document.querySelector('#splash .splash-loader')?.remove();
+    const sub = document.querySelector('#splash .splash-sub');
+    if (sub) {
+      sub.textContent = 'โหลดข้อมูลไม่สำเร็จ';
+      const retry = el('button', 'route-btn', 'ลองใหม่');
+      retry.style.marginTop = '14px';
+      retry.addEventListener('click', () => location.reload());
+      sub.after(retry);
+    }
+    return;
   }
 
   try {

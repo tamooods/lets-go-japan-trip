@@ -20,6 +20,7 @@ function handleDayChange(payload) {
   const newRow = payload.new;
   const oldRow = payload.old;
   const currentDetailId = isDetailMode ? DAYS[detailDayIndex]?.id : null;
+  let updatedIdx = -1;
 
   if (eventType === 'UPDATE') {
     const idx = DAYS.findIndex((d) => d.id === newRow.id);
@@ -29,6 +30,7 @@ function handleDayChange(payload) {
       return;
     }
     DAYS[idx] = newRow;
+    updatedIdx = idx;
   }
 
   if (eventType === 'INSERT') {
@@ -56,6 +58,7 @@ function handleDayChange(payload) {
   }
 
   renderSidebar(DAYS);
+  if (updatedIdx !== -1 && refreshMarker(updatedIdx)) return;
   renderMap(DAYS);
 }
 

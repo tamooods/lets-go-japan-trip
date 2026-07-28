@@ -13,21 +13,10 @@ async function ensureMemberSelected() {
     return;
   }
 
-  let members;
-  try {
-    members = await loadMembers();
-    window.members = members;
-  } catch {
-    alert('ไม่สามารถโหลดรายชื่อสมาชิกได้ กรุณาลองใหม่');
-    location.reload();
-    return;
-  }
-
-  if (!members.length) {
-    alert('ไม่พบรายชื่อสมาชิก กรุณาลองใหม่');
-    location.reload();
-    return;
-  }
+  // ponytail: ปล่อยให้ initApp catch แสดง error + ปุ่มลองใหม่ แทน alert/reload เอง
+  const members = await loadMembers();
+  window.members = members;
+  if (!members.length) throw new Error('no trip members');
 
   const splash = document.getElementById('splash');
   if (splash) splash.classList.add('hidden');

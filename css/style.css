@@ -1126,10 +1126,6 @@ body::before {
   background: #e8a890;
 }
 
-.mk-offset {
-  transition: transform 0.2s ease;
-}
-
 .mk {
   width: 42px;
   height: 42px;
@@ -1201,6 +1197,16 @@ body::before {
 
 .mk:hover .mn,
 .mk.on .mn {
+  color: #fff;
+}
+
+.mk-cluster {
+  border-style: solid;
+  background: var(--red);
+  cursor: pointer;
+}
+
+.mk-cluster .mn {
   color: #fff;
 }
 

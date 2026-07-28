@@ -89,7 +89,7 @@ async function saveEditor() {
   if (idx !== -1) {
     DAYS[idx] = data.row;
     renderSidebar(DAYS);
-    renderMap(DAYS);
+    if (!refreshMarker(idx)) renderMap(DAYS);
   }
   closeEditor();
 }
