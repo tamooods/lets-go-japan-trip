@@ -22,7 +22,7 @@ A premium Japanese travel itinerary planner with real-time collaboration, intera
 | Layer          | Technology                                    |
 | -------------- | --------------------------------------------- |
 | **Frontend**   | Vanilla HTML, CSS, JavaScript (no build step) |
-| **Map**        | Leaflet.js + Esri World Light Gray tiles      |
+| **Map**        | Leaflet.js + MapTiler tiles (light/dark)      |
 | **Database**   | Supabase (PostgreSQL + Realtime)              |
 | **Deployment** | Vercel                                        |
 
@@ -36,6 +36,8 @@ lets-go-japan-trip/
 ├── config.js            # Supabase credentials (gitignored)
 ├── config.example.js    # Config template
 ├── vercel.json          # Vercel deployment config
+├── build-config.sh      # Build step: env vars → config.js
+├── AGENTS.md            # Architecture / conventions (agent guide)
 ├── js/
 │   ├── db.js            # Supabase client initialization
 │   ├── day-places.js    # Day places CRUD
@@ -45,12 +47,13 @@ lets-go-japan-trip/
 │   ├── conflict.js      # Conflict resolution modal
 │   └── script.js        # Core app logic, map rendering
 ├── css/
-│   └── style.css        # Main stylesheet (~1.6K lines)
+│   └── style.css        # Main stylesheet (~2.7K lines)
 ├── assets/
 │   ├── favicon.svg      # Japan-themed favicon
 │   └── bg-lofi.mp3      # Background music
+├── docs/superpowers/specs/  # Design specs for shipped features
 └── supabase/
-    ├── migrations/      # DB schema migrations
+    ├── migrations/      # DB schema migrations (001–009)
     └── seed.sql         # Initial data seeding
 ```
 
@@ -75,8 +78,11 @@ Edit `config.js` and add your Supabase credentials:
 
 ```javascript
 window.SUPABASE_URL = 'https://your-project.supabase.co';
-window.SUPABASE_KEY = 'your-anon-key';
+window.SUPABASE_ANON_KEY = 'your-anon-key';
 window.TRIP_ITINERARY_ID = 'b8f5e2a1-0000-4000-8000-000000000001';
+window.TRIP_DEPARTURE_DATE = '2026-12-06';
+window.MAPTILER_KEY = 'your-maptiler-key';
+window.UNSPLASH_ACCESS_KEY = 'your-unsplash-key';
 ```
 
 ### 3. Start Local Server
