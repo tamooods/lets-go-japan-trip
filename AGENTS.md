@@ -52,7 +52,7 @@ docs/superpowers/specs/  design specs for shipped features
 
 | File               | LoC  | Role                                                           |
 | ------------------ | ---- | -------------------------------------------------------------- |
-| `js/script.js`     | 1008 | Core app: `DAYS` global, `renderSidebar`, `renderMap`, `goTo`  |
+| `js/script.js`     | 996  | Core app: `DAYS` global, `renderSidebar`, `renderMap`, `goTo`  |
 | `js/editor.js`     | 375  | Day edit modal + optimistic lock RPC call                      |
 | `js/day-places.js` | 198  | Place CRUD via RPC (`add_day_place`, `update_day_place`, etc.) |
 | `js/realtime.js`   | 100  | Supabase Realtime subscription on `days` table                 |
