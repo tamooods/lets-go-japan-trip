@@ -43,7 +43,7 @@ Migrations and seed are run manually in the Supabase SQL Editor (no CLI runner):
 index.html            entry point; all modals inline
 config.js             runtime config (gitignored) — from config.example.js or build-config.sh
 build-config.sh       Vercel build: env vars → config.js
-css/style.css         ~2700 lines: theme vars, splash, sidebar, map, modals, animations
+css/style.css         ~1730 lines: token block, splash, sidebar, map, modals, mobile sheet
 js/                   app code (load order below)
 assets/               favicon.svg, bg-lofi.mp3
 supabase/             migrations/001–009 + seed.sql
@@ -52,7 +52,7 @@ docs/superpowers/specs/  design specs for shipped features
 
 | File               | LoC  | Role                                                           |
 | ------------------ | ---- | -------------------------------------------------------------- |
-| `js/script.js`     | 996  | Core app: `DAYS` global, `renderSidebar`, `renderMap`, `goTo`  |
+| `js/script.js`     | 1023 | Core app: `DAYS` global, `renderSidebar`, `renderMap`, `goTo`  |
 | `js/editor.js`     | 375  | Day edit modal + optimistic lock RPC call                      |
 | `js/day-places.js` | 198  | Place CRUD via RPC (`add_day_place`, `update_day_place`, etc.) |
 | `js/realtime.js`   | 100  | Supabase Realtime subscription on `days` table                 |
@@ -66,6 +66,8 @@ docs/superpowers/specs/  design specs for shipped features
 ## Key Conventions
 
 - **DOM helpers:** Use `el(tag, cls, text)` and `append(parent, ...children)` — never `innerHTML` for user data (XSS prevention)
+- **Visual language ("Gazette"):** print-inspired — hierarchy from type + hairline rules, no floating cards or soft shadows, accent reserved for the active day. Newsreader/Noto Serif Thai for display, IBM Plex Sans Thai for body, IBM Plex Mono for dates and numerals.
+- **Colour lives only in the token block** at the top of `css/style.css` (`:root` + `[data-theme='dark']`) — no hex below it. Leaflet strokes can't read CSS vars, so `token('--accent')` ([js/script.js](js/script.js)) resolves them for polylines/polygons and `repaintRoutes()` re-colours them on theme toggle.
 - **Global state:** `DAYS`, `map`, `markers`, `curIdx` live in `script.js`; set `window._editingDayId` in `editor.js` to suppress realtime UI updates while editing
 - **Modals:** Toggle with `.classList.add/remove('hidden')` — `hidden` maps to `display:none` in CSS
 - **`details` JSONB shape:** `{ place, date, jp, lat, lng, acts[], badges[], travel }`. `date` is a free-text label ("6 Dec"); old rows pack `"place_date"` into `place` — `splitPlaceDate()` ([js/script.js:47](js/script.js#L47)) falls back to splitting on `_` until re-saved through the editor.

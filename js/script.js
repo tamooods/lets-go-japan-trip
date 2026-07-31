@@ -50,6 +50,49 @@ function formatDateLabel(dateStr) {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
+// "2026-12-06" → "06.12" for the mono date column; anything else passes through
+function formatDateNum(dateStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || '');
+  return m ? m[3] + '.' + m[2] : dateStr || '';
+}
+
+// "2026-12-06" → "09 ธันวาคม 2026" (gregory — th-TH alone yields the Buddhist year)
+function formatDateLong(dateStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || '');
+  if (!m) return dateStr || '';
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return d.toLocaleDateString('th-TH-u-ca-gregory', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+const pad2 = (n) => String(n).padStart(2, '0');
+
+// Gazette is monochrome — spell the travel mode out instead of showing the emoji.
+// Unknown icon → just the duration.
+const TRAVEL_MODE = { '🚃': 'รถไฟ', '🚗': 'รถ' };
+function travelLabel(travel) {
+  const mode = TRAVEL_MODE[travel.icon];
+  return mode ? mode + ' ' + travel.time : travel.time;
+}
+
+// Leaflet strokes can't take CSS vars — read the resolved token instead
+function token(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+const ROUTE_STYLE = { weight: 1.4, opacity: 0.6, dashArray: '2 6', lineCap: 'round' };
+const ROUTE_HOVER = { weight: 2, opacity: 1, dashArray: null };
+
+function repaintRoutes() {
+  const color = token('--accent');
+  (window._legLines || []).forEach((l) => l.setStyle({ ...ROUTE_STYLE, color }));
+  placePolylines.forEach((l) => l.setStyle({ ...ROUTE_STYLE, color }));
+  if (placeBoundaryLayer) placeBoundaryLayer.setStyle({ color, fillColor: color });
+}
+
 let DAYS = [];
 let places = [],
   placeMarkers = [],
@@ -89,6 +132,7 @@ let detailDayIndex = null,
     syncIcon();
     if (map && tileLayer) {
       tileLayer.setUrl(tileUrlForTheme(document.documentElement.dataset.theme));
+      repaintRoutes();
     }
   });
 })();
@@ -158,6 +202,10 @@ function initStatsWidget() {
 
   if (!widget || !pillValue || !daysEl || !hoursEl || !minutesEl || !secondsEl) return;
 
+  const departEl = document.getElementById('stats-depart');
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(window.TRIP_DEPARTURE_DATE);
+  if (departEl && iso) departEl.textContent = iso[3] + '.' + iso[2] + '.' + iso[1].slice(2);
+
   let countdownInterval;
 
   function updateCountdown() {
@@ -205,6 +253,8 @@ function initStatsWidget() {
 function renderSidebar(days) {
   const listEl = document.getElementById('dayList');
   listEl.textContent = '';
+  const countEl = document.getElementById('dayCount');
+  if (countEl) countEl.textContent = pad2(days.length);
   days.forEach((d, i) => {
     const det = d.details;
     const item = el('div', 'day-item');
@@ -214,14 +264,14 @@ function renderSidebar(days) {
     item.style.animationDelay = i * 0.07 + 0.1 + 's';
 
     const rowTop = el('div', 'day-row');
-    const pin = append(el('div', 's-pin'), el('span', 's-pin-num', String(i + 1)));
+    const pin = append(el('div', 's-pin'), el('span', 's-pin-num', pad2(i + 1)));
     const info = el('div', 'day-info');
     const meta = el('div', 'day-meta');
     (det.badges || []).forEach((b) =>
       meta.appendChild(el('span', ('badge ' + (b.cls || '')).trim(), b.label)),
     );
     if (det.travel) {
-      meta.appendChild(el('span', 'travel-tag', det.travel.icon + ' ' + det.travel.time));
+      meta.appendChild(el('span', 'travel-tag', travelLabel(det.travel)));
     }
 
     const editBtn = el('button', 'edit-day-btn', '\u270f\ufe0f');
@@ -232,12 +282,18 @@ function renderSidebar(days) {
     });
 
     const { place, date } = splitPlaceDate(det);
-    const dayPlace = el('div', 'day-place');
-    dayPlace.appendChild(el('span', 'place-name', place));
-    if (date) dayPlace.appendChild(el('span', 'place-date', date));
-    append(info, dayPlace, el('div', 'day-detail', (det.acts || [])[0] || ''), meta);
-    append(rowTop, pin, info, editBtn);
-    append(item, rowTop);
+    append(info, el('div', 'day-place', place));
+    if (det.jp) info.appendChild(el('div', 'day-jp', det.jp));
+    if (meta.children.length) info.appendChild(meta);
+
+    const side = el('div', 'day-side');
+    // det.date เป็น ISO → dd.mm; แถวเก่าที่ยัด date ไว้ใน place ใช้ค่าที่ splitPlaceDate แกะได้
+    side.appendChild(el('span', 'place-date', det.date ? formatDateNum(det.date) : date));
+    const actCount = (det.acts || []).length;
+    if (actCount) side.appendChild(el('span', 'day-count', actCount + ' กิจกรรม'));
+
+    append(rowTop, pin, info, side);
+    append(item, rowTop, editBtn);
     item.addEventListener('click', () => goTo(i));
     item.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -247,11 +303,11 @@ function renderSidebar(days) {
     });
     item.addEventListener('mouseenter', () => {
       const leg = (window._legLines || [])[i - 1];
-      if (leg) leg.setStyle({ weight: 3, opacity: 0.9, dashArray: null });
+      if (leg) leg.setStyle(ROUTE_HOVER);
     });
     item.addEventListener('mouseleave', () => {
       const leg = (window._legLines || [])[i - 1];
-      if (leg) leg.setStyle({ weight: 2.5, opacity: 0.7, dashArray: '6 8' });
+      if (leg) leg.setStyle(ROUTE_STYLE);
     });
     if (d.last_editor_name) {
       const stamp = el(
@@ -372,8 +428,8 @@ function renderMap(days) {
         '© <a href="https://www.maptiler.com/copyright/">MapTiler</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
 
-    const zoomControl = L.control.zoom({ position: 'topright' });
-    map.addControl(zoomControl);
+    // bottomright — top-right belongs to .map-controls (theme/music)
+    map.addControl(L.control.zoom({ position: 'bottomright' }));
 
     map.on('popupopen', () => lucide?.createIcons());
   }
@@ -392,8 +448,8 @@ function renderMap(days) {
       return L.divIcon({
         className: '',
         html: div.outerHTML,
-        iconSize: [40, 48],
-        iconAnchor: [20, 47],
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
       });
     },
   });
@@ -405,22 +461,11 @@ function renderMap(days) {
   window._legLines = [];
   for (let i = 1; i < coords.length; i++) {
     const leg = L.polyline([coords[i - 1], coords[i]], {
-      color: '#c85c3a',
-      weight: 2.5,
-      opacity: 0.7,
-      dashArray: '6 8',
-      lineCap: 'round',
-      lineJoin: 'round',
+      ...ROUTE_STYLE,
+      color: token('--accent'),
     }).addTo(map);
     window._legLines.push(leg);
   }
-
-  map.once('zoomend', () => {
-    const zoom = map.getZoom();
-    window._legLines.forEach((leg) => {
-      leg.setStyle({ opacity: zoom > 8 ? 0.45 : 0.25 });
-    });
-  });
 
   days.forEach((d, i) => {
     const mkDiv = document.createElement('div');
@@ -428,15 +473,15 @@ function renderMap(days) {
     mkDiv.id = 'mk' + i;
     const mkSpan = document.createElement('span');
     mkSpan.className = 'mn';
-    mkSpan.textContent = String(i + 1);
+    mkSpan.textContent = pad2(i + 1);
     mkDiv.appendChild(mkSpan);
 
     const icon = L.divIcon({
       className: '',
       html: mkDiv.outerHTML,
-      iconSize: [40, 48],
-      iconAnchor: [20, 47],
-      popupAnchor: [0, -50],
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+      popupAnchor: [0, -16],
     });
 
     const m = L.marker(coords[i], { icon }).bindPopup(buildPopup(d, i), { maxWidth: 280 });
@@ -456,15 +501,8 @@ function renderMap(days) {
       const mkEl = document.getElementById('mk' + i);
       if (!mkEl) return;
       mkEl.style.opacity = '0';
-      mkEl.style.transform = 'rotate(-45deg) scale(0.2)';
-      mkEl.style.transition = 'opacity 0.4s, transform 0.5s cubic-bezier(0.34,1.56,0.64,1)';
-      setTimeout(
-        () => {
-          mkEl.style.opacity = '1';
-          mkEl.style.transform = 'rotate(-45deg) scale(1)';
-        },
-        400 + i * 110,
-      );
+      mkEl.style.transition = 'opacity 0.45s ease';
+      setTimeout(() => (mkEl.style.opacity = '1'), 350 + i * 90);
     });
   });
 }
@@ -512,27 +550,6 @@ function goTo(i) {
   setActive(i);
   if (window.innerWidth <= 640 && window._closeMobileDrawer) window._closeMobileDrawer();
 }
-
-const FLOATIES = [
-  '\ud83c\udf38',
-  '\ud83c\udf38',
-  '\ud83c\udf38',
-  '\u2744\ufe0f',
-  '\u2744\ufe0f',
-  '\ud83c\udf38',
-];
-function spawnPetal() {
-  const container = document.getElementById('petals');
-  const petal = el('span', 'p', FLOATIES[Math.floor(Math.random() * FLOATIES.length)]);
-  petal.style.left = Math.random() * 100 + 'vw';
-  petal.style.fontSize = 10 + Math.random() * 9 + 'px';
-  petal.style.animationDuration = 7 + Math.random() * 8 + 's';
-  petal.style.animationDelay = Math.random() * 1.5 + 's';
-  container.appendChild(petal);
-  petal.addEventListener('animationend', () => petal.remove(), { once: true });
-}
-for (let i = 0; i < 14; i++) setTimeout(spawnPetal, i * 250);
-setInterval(spawnPetal, 950);
 
 (function initMobileDrawer() {
   const sidebar = document.querySelector('.sidebar');
@@ -605,9 +622,15 @@ async function enterDetail(i) {
 
   const headerActions = document.querySelector('.btn-group');
   headerActions.classList.add('hidden');
-  detailBackBtn = el('button', 'detail-back-btn');
-  append(detailBackBtn, icon('arrow-left', 15), el('span', null, 'กลับ'));
-  detailBackBtn.addEventListener('click', exitDetail);
+  detailBackBtn = el('div', 'detail-back-row');
+  const backBtn = el('button', 'detail-back-btn');
+  append(backBtn, icon('arrow-left', 15), el('span', null, 'กลับ'));
+  backBtn.addEventListener('click', exitDetail);
+  append(
+    detailBackBtn,
+    backBtn,
+    el('span', 'detail-back-count', 'วันที่ ' + pad2(i + 1) + ' / ' + pad2(DAYS.length)),
+  );
   headerActions.parentNode.insertBefore(detailBackBtn, headerActions);
   lucide?.createIcons();
 
@@ -692,24 +715,29 @@ function renderDayDetail(day) {
   listEl.textContent = '';
 
   const dayNum = DAYS.indexOf(day) + 1;
+  const { place } = splitPlaceDate(day.details);
 
   const header = el('div', 'detail-header');
+  const eyebrow = 'วันที่ ' + dayNum;
   header.appendChild(
-    el('div', 'detail-header-title', 'วันที่ ' + dayNum + ' · ' + day.details.place),
+    el(
+      'div',
+      'detail-header-date',
+      day.details.date ? eyebrow + ' · ' + formatDateLong(day.details.date) : eyebrow,
+    ),
   );
-  if (day.details.date) {
-    const date = formatDateLabel(day.details.date);
-    header.appendChild(el('div', 'detail-header-date', date));
-  }
-  const pills = el('div', 'detail-header-pills');
-  if (day.details.jp) {
-    pills.appendChild(el('span', 'detail-pill', '📍 ' + day.details.jp));
-  }
+  header.appendChild(el('div', 'detail-header-title', place));
+  if (day.details.jp) header.appendChild(el('div', 'detail-header-jp', day.details.jp));
+
   const seedActs = day.details.acts || [];
+  const pills = el('div', 'detail-header-pills');
+  pills.appendChild(el('span', 'detail-pill', places.length + ' สถานที่'));
   if (seedActs.length > 0) {
-    pills.appendChild(el('span', 'detail-pill', '🎯 ' + seedActs.length + ' กิจกรรม'));
+    pills.appendChild(el('span', 'detail-pill', seedActs.length + ' กิจกรรม'));
   }
-  pills.appendChild(el('span', 'detail-pill', '📍 ' + places.length + ' places'));
+  if (day.details.travel) {
+    pills.appendChild(el('span', 'detail-pill', travelLabel(day.details.travel)));
+  }
   header.appendChild(pills);
 
   if (seedActs.length > 0) {
@@ -731,7 +759,10 @@ function renderDayDetail(day) {
       const card = el('div', 'place-card');
       card.dataset.placeId = p.id;
       card.style.animationDelay = idx * 0.05 + 0.1 + 's';
+      // ponytail: schema ไม่มีเวลา — ช่อง gutter ของ timeline ใส่ลำดับแทน
+      card.appendChild(el('div', 'place-card-index', pad2(idx + 1)));
 
+      const body = el('div', 'place-card-body');
       const thumb = el('div', 'place-card-thumb');
       thumb.dataset.placeId = p.id;
       if (p.img) {
@@ -753,12 +784,10 @@ function renderDayDetail(day) {
         ph.appendChild(icon('loader', 20));
         thumb.appendChild(ph);
       }
-      card.appendChild(thumb);
 
       const content = el('div', 'place-card-content');
 
       const headerRow = el('div', 'place-card-header');
-      headerRow.appendChild(el('span', 'place-card-badge', String(idx + 1)));
       headerRow.appendChild(el('span', 'place-card-name', p.name));
       content.appendChild(headerRow);
 
@@ -812,7 +841,8 @@ function renderDayDetail(day) {
       append(actions, editBtn, delBtn, focusBtn);
       content.appendChild(actions);
 
-      card.appendChild(content);
+      append(body, content, thumb);
+      card.appendChild(body);
 
       card.addEventListener('click', () => {
         if (p.lat && p.lng) focusPlace(idx);
@@ -864,13 +894,14 @@ function renderPlaceMap(day) {
 
   fetchDayBoundary(day.details.place).then((coords) => {
     if (!coords || !isDetailMode) return;
+    const accent = token('--accent');
     placeBoundaryLayer = L.polygon(coords, {
-      color: '#c85c3a',
-      weight: 3,
-      opacity: 0.7,
-      dashArray: '8 5',
-      fillColor: '#c85c3a',
-      fillOpacity: 0.04,
+      color: accent,
+      weight: 1.2,
+      opacity: 0.5,
+      dashArray: '2 6',
+      fillColor: accent,
+      fillOpacity: 0.03,
       className: 'day-boundary',
     }).addTo(map);
   });
@@ -885,12 +916,8 @@ function renderPlaceMap(day) {
 
   for (let i = 1; i < validPlaces.length; i++) {
     const pl = L.polyline([coords[i - 1], coords[i]], {
-      color: '#5b7fa0',
-      weight: 3,
-      opacity: 0.7,
-      lineCap: 'round',
-      lineJoin: 'round',
-      dashArray: '6 8',
+      ...ROUTE_STYLE,
+      color: token('--accent'),
     }).addTo(map);
     placePolylines.push(pl);
   }
@@ -901,15 +928,15 @@ function renderPlaceMap(day) {
     mkDiv.id = 'pmk' + p.id;
     const mkSpan = document.createElement('span');
     mkSpan.className = 'mn';
-    mkSpan.textContent = String(idx + 1);
+    mkSpan.textContent = pad2(idx + 1);
     mkDiv.appendChild(mkSpan);
 
     const icon = L.divIcon({
       className: '',
       html: mkDiv.outerHTML,
-      iconSize: [40, 48],
-      iconAnchor: [20, 47],
-      popupAnchor: [0, -50],
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+      popupAnchor: [0, -16],
     });
 
     const m = L.marker([p.lat, p.lng], { icon }).addTo(map);
